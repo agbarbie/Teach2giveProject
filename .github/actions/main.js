@@ -1,24 +1,23 @@
-const core = require('@actions/core'); // Input and output
-const exec = require('@actions/exec'); // Uploading files to S3
+const core = require("@actions/core"); // input and output
+const exec = require("@actions/exec"); // uploading to S3
 
 async function run() {
-  try {
-    // Getting inputs
-    const bucket = core.getInput('bucket', { required: true }); // Bucket name
-    const bucketRegion = core.getInput('bucket-region', { required: true }); // Bucket region
-    const distFolder = core.getInput('dist-folder', { required: true }); // Dist folder name
+  // Get inputs
+  const bucket = core.getInput("bucket", { required: true });
+  const bucketRegion = core.getInput("bucket-region", { required: true });
+  const distFolder = core.getInput("dist-folder", { required: true });
 
-    // Uploading files to S3
-    const s3Url = `s3://${bucket}`; // Correctly interpolated S3 URL
-    await exec.exec('aws', ['s3', 'sync', distFolder, s3Url, '--region', bucketRegion]);
+  // Upload files to S3
+  const s3URI = `s3://${bucket}`;
+  await exec.exec(`aws s3 sync ${distFolder} ${s3URI} --region ${bucketRegion}`);
 
-    // Getting website URL
-    const websiteUrl = `http://${bucket}.s3-website-${bucketRegion}.amazonaws.com`; // Website URL
-    core.setOutput('website-url', websiteUrl); // Setting output
-  } catch (error) {
-    // http://skillmatchesai.s3-website.eu-north-1.amazonaws.com
-    core.setFailed(error.message);
-  }
+  // Get URL
+  const websiteUrl = `http://${bucket}.s3-website-${bucketRegion}.amazonaws.com`;
+
+  // Set the output URL for use in subsequent steps
+  core.setOutput("website-url", websiteUrl);
 }
 
-run();
+run().catch((error) => {
+  core.setFailed(error.message);
+});
