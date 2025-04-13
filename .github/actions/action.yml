@@ -20,5 +20,5 @@ outputs:
     description: "The URL of the deployed website"
 
 runs:
-  using: "node14"
+  using: "node16"
   main: "main.js"
