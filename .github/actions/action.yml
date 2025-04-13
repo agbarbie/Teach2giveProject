@@ -1,23 +1,24 @@
 name: "Deploy the site to an s3 bucket"
-desscription: "Deploy a static website via s3 bucket"
-input:
-bucket:
-description: "The name of the s3 bucket to deploy to"
-required: true
+description: "Deploy a static website via s3 bucket"
 
-bucket-region:
-description: "The region of the s3 bucket to deploy to"
-required: false
-default: "us-north-1"
+inputs:
+  bucket:
+    description: "The name of the s3 bucket to deploy to"
+    required: true
 
-dist-folder:
-dsescription: "The folder containing the deployment files"
-required: true
+  bucket-region:
+    description: "The region of the s3 bucket to deploy to"
+    required: false
+    default: "us-north-1"
 
-output:
-website-url:
-description: "The URL of the deployed website"
+  dist-folder:
+    description: "The folder containing the deployment files"
+    required: true
+
+outputs:
+  website-url:
+    description: "The URL of the deployed website"
 
 runs:
-using: 'node14'
-main: 'main.js'
+  using: "node14"
+  main: "main.js"
