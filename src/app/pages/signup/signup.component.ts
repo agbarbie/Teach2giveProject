@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router,RouterModule} from '@angular/router';
 import { SignupModel } from '../../../interfaces/signup';
 import { FormsModule } from '@angular/forms';
 
+
 @Component({
   selector: 'app-signup',
-  imports: [FormsModule],
+  imports: [FormsModule,RouterModule],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css']
 })
@@ -23,3 +24,4 @@ export class SignupComponent {
     }
   }
 }
+
