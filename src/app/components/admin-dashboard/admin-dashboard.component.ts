@@ -39,11 +39,18 @@ export class AdminDashboardComponent {
 
   aiPrompt: string = '';
   searchQuery: string = '';
+  showAddUserModal = false;
 
-  constructor(
-    public router: Router, // Changed to public
-    public authService: AuthService // Changed to public
-  ) {}
+  newUser: User = {
+    id: 0,
+    name: '',
+    email: '',
+    role: '',
+    status: 'Active'
+  };
+
+
+  constructor(public router: Router, public authService: AuthService) {}
 
   navigateTo(path: string): void {
     this.router.navigate([path]);
@@ -51,7 +58,7 @@ export class AdminDashboardComponent {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/login']); // Redirect to login after logout
+    this.router.navigate(['/login']);
   }
 
   editUser(user: User): void {
@@ -64,7 +71,23 @@ export class AdminDashboardComponent {
   }
 
   addUser(): void {
-    console.log('Adding new user');
+    this.showAddUserModal = true;
+  }
+
+  closeAddUserModal(): void {
+    this.showAddUserModal = false;
+    this.resetNewUserForm();
+  }
+
+  submitNewUser(): void {
+    const newUserWithId = { ...this.newUser, id: Date.now() };
+    this.users.push(newUserWithId);
+    console.log('Added user:', newUserWithId);
+    this.closeAddUserModal();
+  }
+
+  resetNewUserForm(): void {
+    this.newUser = { id: 0, name: '', email: '', role: '', status: 'Active' };
   }
 
   searchUsers(): void {
@@ -73,6 +96,6 @@ export class AdminDashboardComponent {
 
   sendAIPrompt(): void {
     console.log('AI Prompt:', this.aiPrompt);
-    this.aiPrompt = ''; // Clear the input after sending
+    this.aiPrompt = '';
   }
 }

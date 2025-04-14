@@ -7,7 +7,6 @@
         <li class="active"><i class="fas fa-user-shield"></i> Admin</li>
         <li (click)="navigateTo('/ai-assistant')"><i class="fas fa-robot"></i> AI Assistant</li>
 
-        <li (click)="navigateTo('/users')"><i class="fas fa-users"></i> Users</li>
       </ul>
     </nav>
     <div class="auth-buttons">
@@ -34,6 +33,25 @@
             <i class="fas fa-user-plus"></i> Add User
           </button>
         </div>
+
+        <!-- Add User Modal -->
+<div class="modal" *ngIf="showAddUserModal">
+  <div class="modal-content">
+    <span class="close" (click)="closeAddUserModal()">&times;</span>
+    <h2>Add New User</h2>
+    <form (ngSubmit)="submitNewUser()" #addUserForm="ngForm">
+      <input type="text" name="name" [(ngModel)]="newUser.name" placeholder="Full Name" required />
+      <input type="email" name="email" [(ngModel)]="newUser.email" placeholder="Email" required />
+      <select name="role" [(ngModel)]="newUser.role" required>
+        <option value="">Select Role</option>
+        <option value="Admin">Admin</option>
+        <option value="User">User</option>
+      </select>
+      <button type="submit" [disabled]="addUserForm.invalid">Add User</button>
+    </form>
+  </div>
+</div>
+
   
         <div class="table-container">
           <table>
