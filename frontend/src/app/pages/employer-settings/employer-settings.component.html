@@ -1,0 +1,146 @@
+<div class="settings-container">
+    <h1>Employer Settings</h1>
+  
+    <!-- Company Profile -->
+    <section class="settings-section">
+      <h2>Company Profile</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Company Visibility</h3>
+          <p>Make your company profile visible to job seekers</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="companyVisibility">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Job Posting Privacy</h3>
+          <p>Keep job postings private/unlisted</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="jobPostingPrivacy">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Brand Customization</h3>
+          <p>Customize job postings with company branding</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="brandCustomization">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+  
+    <!-- Team & Security -->
+    <section class="settings-section">
+      <h2>Team & Security</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Team Access</h3>
+          <p>Manage team member access and permissions</p>
+        </div>
+        <select [(ngModel)]="teamAccessLevel">
+          <option value="basic">Basic</option>
+          <option value="advanced">Advanced</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Two-Factor Authentication</h3>
+          <p>Enable additional security for your account</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="twoFactorEnabled">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Password</h3>
+          <p>Last changed {{passwordLastChanged}}</p>
+        </div>
+        <button class="btn-change">Change Password</button>
+      </div>
+    </section>
+  
+    <!-- Recruitment Tools -->
+    <section class="settings-section">
+      <h2>Recruitment Tools</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Auto-Responder</h3>
+          <p>Send automatic responses to applicants</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="autoResponder">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Candidate Tracking</h3>
+          <p>Enable advanced candidate tracking system</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="candidateTracking">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Recruiting Analytics</h3>
+          <p>Access detailed recruiting metrics and reports</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="recruitingAnalytics">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+  
+    <!-- Notification Preferences -->
+    <section class="settings-section">
+      <h2>Notification Preferences</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Email Alerts</h3>
+          <p>Receive notifications about new applicants</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="emailAlerts">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Time Zone</h3>
+          <p>Set your local time zone</p>
+        </div>
+        <select [(ngModel)]="timeZone">
+          <option *ngFor="let tz of timeZones" [value]="tz">{{tz}}</option>
+        </select>
+      </div>
+    </section>
+  
+    <div class="settings-actions">
+      <button class="btn-cancel">Cancel</button>
+      <button class="btn-save">Save Changes</button>
+    </div>
+  </div>

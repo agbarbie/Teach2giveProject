@@ -1,0 +1,56 @@
+<div class="signup-container">
+  <h1>Sign Up for SkillMatch AI</h1>
+  <form (ngSubmit)="onSubmit()" #signupForm="ngForm">
+    <div class="form-group">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" class="form-control" name="name" 
+             [(ngModel)]="signupModel.name" required />
+    </div>
+    
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" class="form-control" name="email" 
+             [(ngModel)]="signupModel.email" required />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" class="form-control" name="password" 
+             [(ngModel)]="signupModel.password" required minlength="8" />
+    </div>
+
+    <div class="form-group">
+      <label for="confirmPassword">Confirm Password</label>
+      <input type="password" id="confirmPassword" class="form-control" name="confirmPassword" 
+             [(ngModel)]="signupModel.confirmPassword" required />
+    </div>
+
+    <div class="form-group">
+      <label for="role">I am signing up as:</label>
+      <div class="role-options">
+        <label>
+          <input type="radio" name="role" [(ngModel)]="signupModel.role" value="jobseeker" required>
+          <span>Job Seeker</span>
+        </label>
+        <label>
+          <input type="radio" name="role" [(ngModel)]="signupModel.role" value="employer">
+          <span>Employer</span>
+        </label>
+        <label>
+          <input type="radio" name="role" [(ngModel)]="signupModel.role" value="admin">
+          <span>Admin</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <button type="submit" class="btn btn-primary" [disabled]="!signupForm.valid">
+        Continue
+      </button>
+    </div>
+  </form>
+
+  <p class="redirect">
+    Already have an account? <a routerLink="/login">Login</a>
+  </p>
+</div>

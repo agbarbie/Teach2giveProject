@@ -1,0 +1,234 @@
+<aside class="sidebar">
+  <img src="skillmatchAi.png" alt="SkillMatch AI Logo" class="logo" />
+  <h2>SkillMatchAI</h2>
+  <nav>
+    <ul>
+      <li (click)="navigateTo('/landing')"><i class="fas fa-home"></i> Home</li>
+      <li class="active"><i class="fas fa-user-shield"></i> Admin</li>
+      <li (click)="navigateTo('/admin-settings')"><i class="fas fa-user"></i> settings</li>
+    </ul>
+  </nav>
+  <div class="auth-buttons">
+    <button (click)="navigateTo('/login')">Login</button>
+    <button (click)="navigateTo('/signup')">Sign Up</button>
+    <button (click)="navigateTo('/logout')">Log Out</button>
+  </div>
+</aside>
+
+<div class="admin-container">
+  <header class="admin-header">
+    <h1>Admin Dashboard</h1>
+    <div class="search-bar">
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Search users..." (keyup.enter)="searchUsers()">
+      <button (click)="searchUsers()"><i class="fas fa-search"></i></button>
+    </div>
+  </header>
+
+  <div class="admin-content">
+    <!-- System Management Section -->
+    <section class="system-management">
+      <div class="section-header">
+        <h2>System Management</h2>
+      </div>
+      
+      <div class="system-stats">
+        <div class="stat-card">
+          <h3>CPU Usage</h3>
+          <div class="stat-value">{{cpuUsage}}%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width]="cpuUsage + '%'"></div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>Memory Usage</h3>
+          <div class="stat-value">{{memoryUsage}}%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width]="memoryUsage + '%'"></div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>Disk Usage</h3>
+          <div class="stat-value">{{diskUsage}}%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width]="diskUsage + '%'"></div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>Live Status</h3>
+          <div class="status-indicator" [class.operational]="systemStatus === 'Operational'">
+            {{systemStatus}}
+          </div>
+        </div>
+      </div>
+      
+      <div class="system-details">
+        <div class="details-card">
+          <h3>Memory Usage Graph</h3>
+          <div class="graph-container">
+            <div class="graph">
+              <div class="graph-bar" *ngFor="let data of memoryUsageGraph" [style.height]="data.usage + '%'">
+                <span class="graph-tooltip">{{data.usage}}%</span>
+              </div>
+            </div>
+            <div class="graph-labels">
+              <span *ngFor="let data of memoryUsageGraph">{{data.time}}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="details-card">
+          <h3>System Alerts</h3>
+          <div class="alerts-list">
+            <div class="alert-item" *ngFor="let alert of systemAlerts" [class.high]="alert.severity === 'high'"
+                                                                    [class.medium]="alert.severity === 'medium'"
+                                                                    [class.low]="alert.severity === 'low'">
+              <div class="alert-message">{{alert.message}}</div>
+              <div class="alert-time">{{alert.time}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Analytics Sections -->
+    <div class="analytics-row">
+      <section class="analytics-card jobseeker-analytics">
+        <h3>Jobseeker Analytics</h3>
+        <div class="analytics-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{totalUsers}}</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{activeUserCount}}</div>
+            <div class="stat-label">Active Users</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{newUsersToday}}</div>
+            <div class="stat-label">New Today</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{avgEngagement}}%</div>
+            <div class="stat-label">Avg Engagement</div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="analytics-card employer-analytics">
+        <h3>Employer Analytics</h3>
+        <div class="analytics-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{totalCompanies}}</div>
+            <div class="stat-label">Total Companies</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{newCompaniesToday}}</div>
+            <div class="stat-label">New Today</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{activeCompanies}}</div>
+            <div class="stat-label">Active Companies</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{avgResponseRate}}%</div>
+            <div class="stat-label">Avg Response Rate</div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="analytics-card active-users">
+        <h3>Currently Online</h3>
+        <div class="active-users-count">
+          <div class="stat-value">{{activeUsers}}</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- User Management Section -->
+    <section class="user-management">
+      <div class="section-header">
+        <h2>User Management</h2>
+        <button class="add-user-button" (click)="addUser()">
+          <i class="fas fa-user-plus"></i> Add User
+        </button>
+      </div>
+
+      <!-- Add User Modal -->
+      <div class="modal" *ngIf="showAddUserModal">
+        <div class="modal-content">
+          <span class="close" (click)="closeAddUserModal()">&times;</span>
+          <h2>Add New User</h2>
+          <form (ngSubmit)="submitNewUser()" #addUserForm="ngForm">
+            <input type="text" name="name" [(ngModel)]="newUser.name" placeholder="Full Name" required />
+            <input type="email" name="email" [(ngModel)]="newUser.email" placeholder="Email" required />
+            <select name="role" [(ngModel)]="newUser.role" required>
+              <option value="">Select Role</option>
+              <option value="Admin">Admin</option>
+              <option value="User">Jobseeker</option>
+              <option value="Employer">Employer</option>
+            </select>
+            <button type="submit" [disabled]="addUserForm.invalid">Add User</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>{{user.name}}</td>
+              <td>{{user.email}}</td>
+              <td>{{user.role}}</td>
+              <td>
+                <span class="status-badge" [class.active]="user.status === 'Active'"
+                                     [class.suspended]="user.status === 'Suspended'">
+                  {{user.status}}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="edit-button" (click)="editUser(user)">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="status-button" (click)="toggleUserStatus(user)">
+                  <i class="fas" [class.fa-lock]="user.status === 'Active'"
+                                  [class.fa-unlock]="user.status === 'Suspended'"></i>
+                  {{user.status === 'Active' ? 'Suspend' : 'Activate'}}
+                </button>
+                <button class="edit-button" (click)="deleteUser(user)">
+                  <i class="fas fa-edit"></i> Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- AI Assistant Section -->
+    <section class="ai-assistant">
+      <div class="section-header">
+        <h2>AI Accuracy</h2>
+      </div>
+      <div class="ai-prompt">
+        <p>How may I help you?....</p>
+        <div class="input-group">
+          <input type="text" [(ngModel)]="aiPrompt" placeholder="Ask me anything..." (keyup.enter)="sendAIPrompt()">
+          <button (click)="sendAIPrompt()"><i class="fas fa-paper-plane"></i>Send</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

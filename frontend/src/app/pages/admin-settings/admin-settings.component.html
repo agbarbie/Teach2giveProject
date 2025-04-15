@@ -1,0 +1,163 @@
+<div class="settings-container">
+    <h1>Admin Settings</h1>
+  
+    <!-- System Controls -->
+    <section class="settings-section">
+      <h2>System Controls</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Maintenance Mode</h3>
+          <p>Enable maintenance mode for system updates</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="maintenanceMode">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Debug Mode</h3>
+          <p>Enable detailed system logging</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="debugMode">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>System Monitoring</h3>
+          <p>Monitor system performance metrics</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="systemMonitoring">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+  
+    <!-- Data Management -->
+    <section class="settings-section">
+      <h2>Data Management</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Automated Backup</h3>
+          <p>Enable automated system backups</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="automatedBackup">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>API Access</h3>
+          <p>Enable API access for integration</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="apiAccess">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Backup Frequency</h3>
+          <p>Set backup frequency</p>
+        </div>
+        <select [(ngModel)]="backupFrequency">
+          <option *ngFor="let freq of backupFrequencies" [value]="freq">
+            {{freq | titlecase}}
+          </option>
+        </select>
+      </div>
+    </section>
+  
+    <!-- Security Settings -->
+    <section class="settings-section">
+      <h2>Security Settings</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Access Control</h3>
+          <p>Manage system access permissions</p>
+        </div>
+        <select [(ngModel)]="accessControlLevel">
+          <option *ngFor="let level of accessLevels" [value]="level">
+            {{level | titlecase}}
+          </option>
+        </select>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Security Audit</h3>
+          <p>Enable security audit logging</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="securityAudit">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Log Retention</h3>
+          <p>Set system log retention period</p>
+        </div>
+        <select [(ngModel)]="logRetention">
+          <option *ngFor="let retention of logRetentionOptions" [value]="retention">
+            {{retention}}
+          </option>
+        </select>
+      </div>
+    </section>
+  
+    <!-- System Management -->
+    <section class="settings-section">
+      <h2>System Management</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>User Registration</h3>
+          <p>Allow new user registration</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="userRegistration">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Content Notifications</h3>
+          <p>Enable automated content notifications</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="contentNotifications">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Automation Trace</h3>
+          <p>Enable system maintenance tools</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="automationTrace">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+  
+    <div class="settings-actions">
+      <button class="btn-cancel">Cancel</button>
+      <button class="btn-save">Save Changes</button>
+    </div>
+  </div>

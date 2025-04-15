@@ -1,0 +1,134 @@
+<div class="settings-container">
+    <h1>Jobseeker Settings</h1>
+  
+    <!-- Account Preferences -->
+    <section class="settings-section">
+      <h2>Account Preferences</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Profile Visibility</h3>
+          <p>Make your profile visible to employers</p>
+        </div>
+        <select [(ngModel)]="profileVisibility">
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Research Privacy</h3>
+          <p>Make seamless information in your resume</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="researchPrivacy">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Job Preferences</h3>
+          <p>Show employers your preferred job type</p>
+        </div>
+        <div class="multi-select">
+          <label *ngFor="let pref of ['Full-time', 'Part-time', 'Contract', 'Remote', 'Hybrid']">
+            <input type="checkbox" 
+                   [checked]="jobPreferences.includes(pref)"
+                   (change)="toggleJobPreference(pref)">
+            {{pref}}
+          </label>
+        </div>
+      </div>
+    </section>
+  
+    <!-- Security Settings -->
+    <section class="settings-section">
+      <h2>Security Settings</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Two Factor Authentication</h3>
+          <p>Facilitate additional security for your account</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="twoFactorEnabled">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Password</h3>
+          <p>Last changed {{passwordLastChanged}}</p>
+        </div>
+        <button class="btn-change">Change Password</button>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Privacy Protocol</h3>
+          <p>{{privacyProtocol}}</p>
+        </div>
+        <button class="btn-secondary">Start a Shareboard</button>
+      </div>
+    </section>
+  
+    <!-- Notification Settings -->
+    <section class="settings-section">
+      <h2>Notification Settings</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Email Notifications</h3>
+          <p>Review job alerts via mail</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="emailNotifications">
+          <span class="slider"></span>
+        </label>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Search Alerts</h3>
+          <p>Get notified about new repository jobs</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="searchAlerts">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+  
+    <!-- Preferences -->
+    <section class="settings-section">
+      <h2>Preferences</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Language</h3>
+          <p>Select your preferred language</p>
+        </div>
+        <select [(ngModel)]="language">
+          <option *ngFor="let lang of languages" [value]="lang">{{lang}}</option>
+        </select>
+      </div>
+  
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>Time Zone</h3>
+          <p>Set your local time zone</p>
+        </div>
+        <select [(ngModel)]="timeZone">
+          <option *ngFor="let tz of timeZones" [value]="tz">{{tz}}</option>
+        </select>
+      </div>
+    </section>
+  
+    <div class="settings-actions">
+      <button class="btn-cancel">Cancel</button>
+      <button class="btn-save">Save Changes</button>
+    </div>
+  </div>

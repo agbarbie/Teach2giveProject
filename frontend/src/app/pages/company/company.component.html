@@ -1,0 +1,41 @@
+<div class="profile-container">
+    <div class="profile-card">
+      <h1>Set Up Company Profile</h1>
+      
+      <form [formGroup]="companyForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <input type="text" formControlName="companyName" placeholder="Company Name" required>
+        </div>
+  
+        <div class="form-group">
+          <input type="url" formControlName="website" placeholder="Website" required>
+        </div>
+  
+        <div class="form-group">
+          <select formControlName="industry" required>
+            <option value="" disabled selected>Select Industry</option>
+            <option *ngFor="let industry of industries" [value]="industry">{{industry}}</option>
+          </select>
+        </div>
+  
+        <div class="form-group">
+          <textarea formControlName="companyDescription" placeholder="Company Description" rows="4" required></textarea>
+        </div>
+  
+        <div class="file-upload">
+          <label>Upload Logo (optional)</label>
+          <input type="file" (change)="onLogoFileChange($event)" accept="image/*">
+        </div>
+  
+        <div class="form-group">
+          <input type="email" formControlName="workEmail" placeholder="Work Email (optional)">
+        </div>
+  
+        <div class="form-group">
+          <input type="text" formControlName="phoneNumber" placeholder="Phone Number" required>
+        </div>
+  
+        <button type="submit" class="btn-primary"></button>
+      </form>
+    </div>
+  </div>

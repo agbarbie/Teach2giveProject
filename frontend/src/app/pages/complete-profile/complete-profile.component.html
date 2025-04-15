@@ -1,0 +1,187 @@
+<div class="profile-container">
+  <div class="profile-card">
+    <h1>Complete Your Profile</h1>
+    
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+      <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+        <span>1</span>
+        <p>Personal Info</p>
+      </div>
+      <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+        <span>2</span>
+        <p>Experience</p>
+      </div>
+      <div class="step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3">
+        <span>3</span>
+        <p>Skills</p>
+      </div>
+      <div class="step" [class.active]="currentStep === 4" [class.completed]="currentStep > 4">
+        <span>4</span>
+        <p>Education</p>
+      </div>
+    </div>
+
+    <!-- Personal Info Step -->
+    <div class="step-content" *ngIf="currentStep === 1">
+      <form [formGroup]="personalInfoForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" formControlName="firstName" placeholder="Enter your first name">
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" formControlName="lastName" placeholder="Enter your last name">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" formControlName="email" placeholder="Enter your email">
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" formControlName="phone" placeholder="Enter your phone number">
+        </div>
+
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" formControlName="location" placeholder="Enter your location">
+        </div>
+
+        <div class="form-group">
+          <label>Professional Headline</label>
+          <input type="text" formControlName="headline" placeholder="e.g. Frontend Developer">
+        </div>
+      </form>
+    </div>
+
+    <!-- Experience Step -->
+    <div class="step-content" *ngIf="currentStep === 2">
+      <h3>Add Your Work Experience</h3>
+      
+      <div class="experience-list" *ngIf="experiences.length > 0">
+        <div class="experience-item" *ngFor="let exp of experiences; let i = index">
+          <h4>{{exp.position}} at {{exp.company}}</h4>
+          <p>{{exp.startDate}} - {{exp.endDate || 'Present'}}</p>
+          <p>{{exp.description}}</p>
+          <button class="remove-btn" (click)="removeExperience(i)">Remove</button>
+        </div>
+      </div>
+
+      <form [formGroup]="experienceForm" (ngSubmit)="addExperience()">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Company</label>
+            <input type="text" formControlName="company" placeholder="Company name">
+          </div>
+          <div class="form-group">
+            <label>Position</label>
+            <input type="text" formControlName="position" placeholder="Your position">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" formControlName="startDate">
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" formControlName="endDate" placeholder="Leave empty if current">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea formControlName="description" rows="3" placeholder="Describe your role and responsibilities"></textarea>
+        </div>
+
+        <button type="submit" class="add-btn">Add Experience</button>
+      </form>
+    </div>
+
+    <!-- Skills Step -->
+    <div class="step-content" *ngIf="currentStep === 3">
+      <h3>Add Your Skills</h3>
+      
+      <div class="skills-list" *ngIf="skills.length > 0">
+        <div class="skill-tag" *ngFor="let skill of skills">
+          {{skill}}
+          <span class="remove-tag" (click)="removeSkill(skill)">×</span>
+        </div>
+      </div>
+
+      <form [formGroup]="skillsForm" (ngSubmit)="addSkill()">
+        <div class="form-group">
+          <label>Add a skill</label>
+          <div class="input-with-btn">
+            <input type="text" formControlName="newSkill" placeholder="Type a skill and click Add">
+            <button type="submit" class="add-btn">Add</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Education Step -->
+    <div class="step-content" *ngIf="currentStep === 4">
+      <h3>Add Your Education</h3>
+      
+      <div class="education-list" *ngIf="educationItems.length > 0">
+        <div class="education-item" *ngFor="let edu of educationItems; let i = index">
+          <h4>{{edu.degree}} in {{edu.fieldOfStudy}}</h4>
+          <p>{{edu.institution}}</p>
+          <p>{{edu.startDate}} - {{edu.endDate || 'Present'}}</p>
+          <button class="remove-btn" (click)="removeEducation(i)">Remove</button>
+        </div>
+      </div>
+
+      <form [formGroup]="educationForm" (ngSubmit)="addEducation()">
+        <div class="form-group">
+          <label>Institution</label>
+          <input type="text" formControlName="institution" placeholder="School or university name">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Degree</label>
+            <input type="text" formControlName="degree" placeholder="e.g. Bachelor's">
+          </div>
+          <div class="form-group">
+            <label>Field of Study</label>
+            <input type="text" formControlName="fieldOfStudy" placeholder="e.g. Computer Science">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" formControlName="startDate">
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" formControlName="endDate" placeholder="Leave empty if current">
+          </div>
+        </div>
+
+        <button type="submit" class="add-btn">Add Education</button>
+      </form>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="step-actions">
+      <button class="prev-btn" *ngIf="currentStep > 1" (click)="prevStep()">Previous</button>
+      
+      <button class="next-btn" *ngIf="currentStep < totalSteps" (click)="nextStep()" 
+              [disabled]="currentStep === 1 && !personalInfoForm.valid">
+        Next
+      </button>
+      
+      <button class="complete-btn" *ngIf="currentStep === totalSteps" (click)="completeProfile()">
+        Complete Profile
+      </button>
+    </div>
+  </div>
+</div>
