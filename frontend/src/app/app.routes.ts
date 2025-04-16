@@ -18,7 +18,6 @@ import {JobSeekerProfileComponent} from './pages/jobseeker-profile/jobseeker-pro
 import { PostJobsComponent } from './post-jobs/post-jobs.component';
 import { CompanyComponent } from './pages/company/company.component';
 import { CompleteProfileComponent } from './pages/complete-profile/complete-profile.component';
-import { AboutUsComponent } from './pages/about-us/about-us.component';
 import { AdminSettingsComponent } from './pages/admin-settings/admin-settings.component';
 import { EmployerSettingsComponent } from './pages/employer-settings/employer-settings.component';
 import { JobseekerSettingsComponent } from './pages/jobseeker-settings/jobseeker-settings.component';
@@ -28,8 +27,6 @@ export const routes: Routes = [
   {path: 'admin-settings', component: AdminSettingsComponent},
   {path: 'employer-settings', component: EmployerSettingsComponent},
   {path: 'job-seeker-settings', component: JobseekerSettingsComponent},
-  {path:'aboutus',component:AboutUsComponent},
-  { path: 'contact', component: ContactComponent },
   { path: 'ai-assistant', component: AiAssistantComponent, data: { title: 'AI Assistant' } },
   { path: 'post-jobs', component: PostJobsComponent, data: { title: 'Post Jobs' } },
   { path: 'jobseeker-profile', component: JobSeekerProfileComponent, data: { title: 'Job Seeker Profile' } },
