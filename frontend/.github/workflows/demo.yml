@@ -31,22 +31,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('package-lock.json') }}
+          key: deps-node-modules-${{ hashFiles('/package-lock.json') }}
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Debug Scripts
-        run: npm run
-
       - name: Build Code
-        run: npm run build --if-present
+        run: npm run build
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
-          path: dist/
+          path: dist
 
   deploy:
     runs-on: ubuntu-latest
@@ -59,17 +56,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dist-files
-          path: dist/
+          path: ./dist
 
       - name: Output Contents
-        run: ls -R ./dist
+        run: ls
 
       - name: Deploy
         id: deploy
         uses: ./.github/actions
         with:
           bucket: skillmatchesai
-          dist-folder: ./frontend/dist/skillmatches-ai/browser
+          dist-folder: ./dist/skillmatches-ai/browser
           bucket-region: eu-north-1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
