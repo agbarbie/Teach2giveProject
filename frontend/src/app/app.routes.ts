@@ -51,7 +51,6 @@ export const routes: Routes = [
     component: AdminDashboardComponent,
     data: { title: 'Admin Dashboard' },
     children: [
-      { path: 'users', component: UserManagementComponent },
       { path: 'ai-assistant', component: AiAssistantComponent },
       { path: 'analytics', component: AnalyticsComponent },
       { path: '', redirectTo: 'users', pathMatch: 'full' }
