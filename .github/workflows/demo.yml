@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
-          path: ./frontend/dist
+          path: ./dist
 
   deploy:
     runs-on: ubuntu-latest
