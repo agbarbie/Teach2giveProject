@@ -26,7 +26,7 @@ export const routes: Routes = [
   { path: '', redirectTo: 'landing', pathMatch: 'full' },
   {path: 'admin-settings', component: AdminSettingsComponent},
   {path: 'employer-settings', component: EmployerSettingsComponent},
-  {path: 'job-seeker-settings', component: JobseekerSettingsComponent},
+  {path: 'jobseeker-settings', component: JobseekerSettingsComponent},
   { path: 'ai-assistant', component: AiAssistantComponent, data: { title: 'AI Assistant' } },
   { path: 'post-jobs', component: PostJobsComponent, data: { title: 'Post Jobs' } },
   { path: 'jobseeker-profile', component: JobSeekerProfileComponent, data: { title: 'Job Seeker Profile' } },
