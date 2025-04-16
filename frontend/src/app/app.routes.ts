@@ -32,7 +32,6 @@ export const routes: Routes = [
   {path:'aboutus',component:AboutUsComponent},
   { path: 'contact', component: ContactComponent },
   { path: 'ai-assistant', component: AiAssistantComponent, data: { title: 'AI Assistant' } },
-  { path: 'user-management', component: UserManagementComponent, data: { title: 'User Management' } },
   { path: 'post-jobs', component: PostJobsComponent, data: { title: 'Post Jobs' } },
   { path: 'jobseeker-profile', component: JobSeekerProfileComponent, data: { title: 'Job Seeker Profile' } },
   { path: 'candidates', component: CandidatesComponent, data: { title: 'Candidates Overview' } },
