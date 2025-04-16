@@ -76,4 +76,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
 
       - name: Output URL
-        run: echo "Live URL: ${{ steps.deploy.outputs.website-url }}"
+        run: echo "Live URL:${{ steps.deploy.outputs.website-url }}"
