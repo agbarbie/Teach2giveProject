@@ -9,7 +9,6 @@ import { EmployerDashboardComponent } from './components/employer-dashboard/empl
 import { LandingComponent } from './pages/landing/landing.component';
 import { ContactComponent } from './pages/contact/contact.component';
 import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
-import { UserManagementComponent } from './user-management/user-management.component';
 import { AiAssistantComponent } from './pages/ai-assistant/ai-assistant.component';
 import { AnalyticsComponent } from './pages/analytics/analytics.component';
 import { JobsComponent } from './jobs/jobs.component';
