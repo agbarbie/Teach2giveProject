@@ -31,16 +31,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('package-lock.json') }}
+          key: deps-node-modules-${{ hashFiles('/package-lock.json') }}
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Debug Scripts
-        run: npm run
-
       - name: Build Code
-        run: npm run build --if-present
+        run: npm run build
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -62,7 +59,7 @@ jobs:
           path: ./dist
 
       - name: Output Contents
-        run: ls -R ./dist
+        run: ls
 
       - name: Deploy
         id: deploy
@@ -76,4 +73,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
 
       - name: Output URL
-        run: echo "Live URL: ${{ steps.deploy.outputs.website-url }}"
+        run: echo "Live URL:${{ steps.deploy.outputs.website-url }}"
