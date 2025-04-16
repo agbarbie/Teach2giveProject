@@ -34,7 +34,9 @@ jobs:
           key: deps-node-modules-${{ hashFiles('/package-lock.json') }}
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          cd frontend
+          npm install
 
       - name: Build Code
         run: npm run build
