@@ -1,55 +1,80 @@
 import { Response } from "express";
-import dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-// You can keep these debug lines during development but remove in production
-console.log("JWT_SECRET: ", process.env.JWT_SECRET);
-console.log("REFRESH_TOKEN_SECRET: ", process.env.REFRESH_TOKEN_SECRET);
+interface TokenPayload {
+  userId: number;
+  roleId?: number;
+  userType?: 'job_seeker' | 'employer';
+}
 
-export const generateToken = (res: Response, user_id: number, role_id: number) => {
-    const jwtSecret = process.env.JWT_SECRET;
-    const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
-    
-    if (!jwtSecret || !refreshSecret) {
-        throw new Error("JWT_SECRET or REFRESH_TOKEN_SECRET is not defined in environment variables");
-    }
-    
-    try {
-        // Generate a short-lived access token for 15 minutes
-        const accessToken = jwt.sign(
-            { user_id, role_id }, 
-            jwtSecret, 
-            { expiresIn: "15m" }
-        );
-        
-        // Generate a long-lived refresh token for 30 days
-        const refreshToken = jwt.sign(
-            { user_id }, 
-            refreshSecret, 
-            { expiresIn: "30d" }
-        );
-        
-        // Set Access token as HTTP-Only secure cookie
-        res.cookie("access_token", accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV !== "development", // Secure in production
-            sameSite: "strict",
-            maxAge: 15 * 60 * 1000, // 15 minutes
-        });
-        
-        // Set Refresh Token as HTTP-Only Secure Cookie
-        res.cookie("refresh_token", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV !== "development",
-            sameSite: "strict",
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        });
-        
-        return { accessToken, refreshToken };
-    } catch (error) {
-        console.error("Error generating JWT:", error);
-        throw new Error("Error generating authentication tokens");
-    }
+export const generateToken = (res: Response, payload: TokenPayload) => {
+  const { userId, roleId, userType } = payload;
+  const jwtSecret = process.env.JWT_SECRET;
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
+
+  if (!jwtSecret || !refreshSecret) {
+    throw new Error("JWT secrets are not configured");
+  }
+
+  try {
+    // Access Token (short-lived - 15 minutes)
+    const accessToken = jwt.sign(
+      { userId, roleId, userType },
+      jwtSecret,
+      { expiresIn: "15m" }
+    );
+
+    // Refresh Token (long-lived - 7 days)
+    const refreshToken = jwt.sign(
+      { userId },
+      refreshSecret,
+      { expiresIn: "7d" }
+    );
+
+    // Set cookies with secure flags
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "strict" : "lax" as "strict" | "lax" | "none",
+    };
+
+    res.cookie("access_token", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie("refresh_token", refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return { accessToken, refreshToken };
+
+  } catch (error) {
+    console.error("Token generation error:", error);
+    throw new Error("Failed to generate authentication tokens");
+  }
+};
+
+export const verifyAccessToken = (token: string) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET not configured");
+  }
+  return jwt.verify(token, process.env.JWT_SECRET) as TokenPayload;
+};
+
+export const verifyRefreshToken = (token: string) => {
+  if (!process.env.REFRESH_TOKEN_SECRET) {
+    throw new Error("REFRESH_TOKEN_SECRET not configured");
+  }
+  return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET) as { userId: number };
+};
+
+export const clearAuthCookies = (res: Response) => {
+  res.clearCookie("access_token");
+  res.clearCookie("refresh_token");
 };

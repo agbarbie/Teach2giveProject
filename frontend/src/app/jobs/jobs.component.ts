@@ -105,4 +105,15 @@ export class JobsComponent implements OnInit {
   navigateTo(page: string): void {
     this.router.navigate([page]);
   }
+  // In your component.ts file
+isMenuOpen = false;
+
+toggleMenu() {
+  this.isMenuOpen = !this.isMenuOpen;
+}
+
+closeMenu() {
+  this.isMenuOpen = false;
+}
+
 }

@@ -33,10 +33,10 @@ export class LoginComponent {
           this.router.navigate(['/admin-dashboard']);
           break;
         case 'employer':
-          this.router.navigate(['/employers-dashboard']);
+          this.router.navigate(['/employer-dashboard']);
           break;
         case 'jobseeker':
-          this.router.navigate(['/jobseekers-dashboard']);
+          this.router.navigate(['/jobseeker-dashboard']);
           break;
         default:
           this.router.navigate(['/landing']);
