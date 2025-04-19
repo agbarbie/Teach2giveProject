@@ -2,7 +2,7 @@
 .profile-container {
     max-width: 900px;
     margin: 2rem auto;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif !important;
     color: #1a1a1a;
     background: #ffffff;
     border-radius: 16px;

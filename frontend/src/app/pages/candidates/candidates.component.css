@@ -2,7 +2,7 @@
 .candidates-container {
   display: flex;
   min-height: 100vh;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'Poppins', sans-serif !important;
   background-color: #f8fafc;
 }
 

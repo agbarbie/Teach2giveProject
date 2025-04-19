@@ -1,7 +1,8 @@
 /* job-application-form.component.css */
 :host {
     display: block;
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif !important;
+
   }
   
   .container {
