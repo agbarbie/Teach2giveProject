@@ -28,6 +28,6 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: chegebb/backendusers:latest
+          tags: barbkoi/backendusers:latest
           cache-from: type=registry,ref=barbkoi/backendusers:latest
           cache-to: type=inline
