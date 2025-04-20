@@ -1,0 +1,55 @@
+<div class="portfolio-container">
+    <h2>Developer Portfolio</h2>
+  
+    <div class="tabs">
+      <button [class.active]="activeTab === 'skills'" (click)="activeTab = 'skills'">Skills</button>
+      <button [class.active]="activeTab === 'certifications'" (click)="activeTab = 'certifications'">Certifications</button>
+      <button [class.active]="activeTab === 'projects'" (click)="activeTab = 'projects'">Projects</button>
+    </div>
+  
+    <div class="content">
+      <!-- Skills -->
+      <div *ngIf="activeTab === 'skills'" class="skills">
+        <h3>Technical Skills</h3>
+        <div class="skill" *ngFor="let skill of skills">
+          <div class="label">
+            <span>{{ skill.name }}</span>
+            <span>{{ skill.years }} years</span>
+          </div>
+          <div class="bar">
+            <div class="fill" [style.width.%]="skill.proficiency"></div>
+          </div>
+          <p>{{ skill.proficiency }}% Proficiency</p>
+        </div>
+      </div>
+  
+      <!-- Certifications -->
+      <div *ngIf="activeTab === 'certifications'" class="certifications">
+        <h3>Professional Certifications</h3>
+        <div class="cert-list">
+          <div class="cert" *ngFor="let cert of certifications">
+            <div class="badge">100×100</div>
+            <p class="title">{{ cert.title }}</p>
+            <p class="issuer">{{ cert.issuer }}</p>
+            <p class="year">{{ cert.year }}</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Projects -->
+      <div *ngIf="activeTab === 'projects'" class="projects">
+        <h3>Featured Projects</h3>
+        <div class="project" *ngFor="let project of projects">
+          <div class="image">600 × 400</div>
+          <div class="details">
+            <h4>{{ project.title }}</h4>
+            <p>{{ project.description }}</p>
+            <div class="stack">
+              <span *ngFor="let tech of project.stack">{{ tech }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  

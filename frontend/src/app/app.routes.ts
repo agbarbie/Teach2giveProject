@@ -21,9 +21,11 @@ import { CompleteProfileComponent } from './pages/complete-profile/complete-prof
 import { AdminSettingsComponent } from './pages/admin-settings/admin-settings.component';
 import { EmployerSettingsComponent } from './pages/employer-settings/employer-settings.component';
 import { JobseekerSettingsComponent } from './pages/jobseeker-settings/jobseeker-settings.component';
+import { PortfolioComponent } from './pages/portfolio/portfolio.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'landing', pathMatch: 'full' },
+  {path: 'portfolio', component: PortfolioComponent},
   {path: 'admin-settings', component: AdminSettingsComponent},
   {path: 'employer-settings', component: EmployerSettingsComponent},
   {path: 'jobseeker-settings', component: JobseekerSettingsComponent},

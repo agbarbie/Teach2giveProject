@@ -1,0 +1,153 @@
+*{
+    font-family:'Poppins', sans-serif !important;  
+
+}
+body{
+    background: #0a192f;
+    color: white;
+    font-family: 'Poppins', sans-serif !important;
+}
+.portfolio-container {
+  background: #082f49;
+  color: white;
+  padding: 2rem;
+  min-height: 100vh;
+  font-family:'Poppins', sans-serif !important;  
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: var(--orange);
+  }
+
+  .tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+
+    button {
+      background: none;
+      border: 1px solid var(--orange);
+      color: orange;
+      padding: 0.5rem 1rem;
+      margin: 0 0.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &.active,
+      &:hover {
+        background: orange;
+        color: #333;
+      }
+    }
+  }
+
+  .content {
+    .skills, .certifications, .projects {
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .skills .skill {
+      background: #075985;
+      box-shadow: 8px 5px 5px rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      .label {
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+      }
+      .bar {
+        background: #333;
+        height: 10px;
+        border-radius: 5px;
+        margin: 0.5rem 0;
+        .fill {
+          background: orange;
+          height: 100%;
+          border-radius: 5px;
+        }
+      }
+    }
+
+    .certifications {
+      .cert-list {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        .cert {
+          background: #1a1a2e;
+          border-radius: 8px;
+          padding: 1rem;
+          flex: 1;
+          text-align: center;
+          min-width: 200px;
+          .badge {
+            width: 100px;
+            height: 100px;
+            margin: auto;
+            background: #333;
+            border-radius: 50%;
+            line-height: 100px;
+            font-weight: bold;
+            margin-bottom: 1rem;
+          }
+          .title {
+            color: orange;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+
+    .projects {
+      .project {
+        background: #1a1a2e;
+        display: flex;
+        margin-bottom: 1.5rem;
+        border-radius: 8px;
+        overflow: hidden;
+
+        .image {
+          background: #333;
+          color: #999;
+          width: 200px;
+          height: 120px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+        }
+
+        .details {
+          padding: 1rem;
+          h4 {
+            color: orange;
+            margin-bottom: 0.5rem;
+          }
+          .stack span {
+            background: orange;
+            color: #333;
+            padding: 0.2rem 0.5rem;
+            margin-right: 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  } to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
