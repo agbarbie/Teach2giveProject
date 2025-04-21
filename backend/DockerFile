@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install dependencies, including ts-node-dev globally
-RUN npm install && npm install -g ts-node-dev
+RUN npm install 
 
 # Copy source code
 COPY . .

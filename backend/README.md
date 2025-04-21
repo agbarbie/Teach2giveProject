@@ -30,3 +30,14 @@ backend/
 │   │   └── user.ts
 │   └── utils/
 │       └── helpers/
+
+
+sudo docker run -d --name backendusers-fixed \
+  -p 80:80 \
+  -e DB_HOST=skillmatchesai1.clys68qy6l9q.eu-north-1.rds.amazonaws.com \
+  -e DB_PORT=5432 \
+  -e DB_USER=postgres \
+  -e DB_NAME=skillmatchesai1 \
+  -e DB_PASSWORD=Barbie1620 \
+  -e DB_SSL=true \
+  barbkoi/backendusers-fixed:latest
