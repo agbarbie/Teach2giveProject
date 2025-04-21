@@ -3,91 +3,59 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkProfileComplete = exports.authorize = exports.protect = void 0;
+exports.restrictTo = exports.protect = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const db_config_1 = __importDefault(require("../db/db.config"));
-const asyncHandlers_1 = __importDefault(require("./asyncHandlers"));
-// Auth middleware to protect routes 
-exports.protect = (0, asyncHandlers_1.default)(async (req, res, next) => {
+// Custom error class
+class AppError extends Error {
+    constructor(message, statusCode) {
+        super(message);
+        this.statusCode = statusCode;
+        this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
+        this.isOperational = true;
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+// Async handler to avoid try-catch blocks in each controller
+const asyncHandler = (fn) => {
+    return (req, res, next) => {
+        fn(req, res, next).catch(next);
+    };
+};
+// Authentication middleware
+exports.protect = asyncHandler(async (req, res, next) => {
+    // 1) Get token from authorization header
     let token;
-    // Try to get token from Authorization Header
-    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-        token = req.headers.authorization.split(" ")[1];
+    const authHeader = req.headers.authorization;
+    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer')) {
+        token = authHeader.split(' ')[1];
     }
-    // Get the token from cookies if not found in header
-    else if (req.cookies?.access_token) {
-        token = req.cookies.access_token;
-    }
-    // If no token found
     if (!token) {
-        return res.status(401).json({
-            success: false,
-            message: "Not authorized, no token"
-        });
+        return next(new AppError('You are not logged in! Please log in to get access.', 401));
     }
+    // 2) Verify token
     try {
-        // Verify token
-        if (!process.env.JWT_SECRET) {
-            throw new Error("JWT_SECRET is not defined in environment variables");
-        }
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-        // Get user from database with role information
-        const userQuery = await db_config_1.default.query(`SELECT 
-                users.id, 
-                users.name, 
-                users.email, 
-                users.role_id, 
-                user_roles.role_name,
-                users.profile_completed
-             FROM users 
-             JOIN user_roles ON users.role_id = user_roles.id 
-             WHERE users.id = $1`, [decoded.userId]);
-        if (userQuery.rows.length === 0) {
-            return res.status(401).json({
-                success: false,
-                message: "User not found"
-            });
-        }
-        // Attach user to the request object
-        req.user = userQuery.rows[0];
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'your-default-secret-key');
+        // Set user data on request object
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
         next();
     }
     catch (error) {
-        console.error("JWT Error:", error);
-        // Handle specific JWT errors
-        let errorMessage = "Not authorized, token failed";
-        if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
-            errorMessage = "Session expired, please login again";
-        }
-        else if (error instanceof jsonwebtoken_1.default.JsonWebTokenError) {
-            errorMessage = "Invalid token";
-        }
-        return res.status(401).json({
-            success: false,
-            message: errorMessage
-        });
+        return next(new AppError('Invalid token. Please log in again.', 401));
     }
 });
 // Role-based authorization middleware
-const authorize = (...roles) => {
+const restrictTo = (...roles) => {
     return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.role_name)) {
-            return res.status(403).json({
-                success: false,
-                message: `User role ${req.user?.role_name || "unknown"} is not authorized to access this route`
-            });
+        if (!req.user) {
+            return next(new AppError('You are not logged in! Please log in to get access.', 401));
+        }
+        if (!roles.includes(req.user.role)) {
+            return next(new AppError('You do not have permission to perform this action', 403));
         }
         next();
     };
 };
-exports.authorize = authorize;
-// Middleware to check if profile is completed
-exports.checkProfileComplete = (0, asyncHandlers_1.default)(async (req, res, next) => {
-    if (!req.user?.profile_completed) {
-        return res.status(403).json({
-            success: false,
-            message: "Please complete your profile to access this feature"
-        });
-    }
-    next();
-});
+exports.restrictTo = restrictTo;

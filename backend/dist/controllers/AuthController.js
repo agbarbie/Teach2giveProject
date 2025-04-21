@@ -3,63 +3,110 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.register = void 0;
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+exports.changePassword = exports.getCurrentUser = exports.login = exports.register = void 0;
+const asyncHandlers_1 = __importDefault(require("../middlewares/asyncHandlers"));
 const db_config_1 = __importDefault(require("../db/db.config"));
-const JWT_SECRET = process.env.JWT_SECRET || 'skillmatches_secret';
-// Register
-const register = async (req, res) => {
-    try {
-        const { name, email, password, user_type } = req.body;
-        const existingUserQuery = await db_config_1.default.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (existingUserQuery.rows.length > 0) {
-            res.status(400).json({ message: 'User already exists' });
-            return;
-        }
-        const password_hash = await bcryptjs_1.default.hash(password, 10);
-        const newUserQuery = await db_config_1.default.query('INSERT INTO users (name, email, password_hash, user_type) VALUES ($1, $2, $3, $4) RETURNING id, name, email, user_type', [name, email, password_hash, user_type]);
-        res.status(201).json({
-            message: 'User registered successfully',
-            user: newUserQuery.rows[0],
-        });
+const errorMiddlewares_1 = require("../middlewares/errorMiddlewares");
+const helpers_1 = require("../utils/helpers");
+// @desc    Register a new user
+// @route   POST /api/auth/register
+// @access  Public
+exports.register = (0, asyncHandlers_1.default)(async (req, res) => {
+    const { email, password, role } = req.body;
+    if (!email || !password) {
+        throw new errorMiddlewares_1.AppError('Please provide email and password', 400);
     }
-    catch (error) {
-        console.error('Registration Error:', error);
-        res.status(500).json({ message: 'Server error' });
+    // Check if email already exists
+    const userExists = await db_config_1.default.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userExists.rows.length > 0) {
+        throw new errorMiddlewares_1.AppError('User already exists', 400);
     }
-};
-exports.register = register;
-// Login
-const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const userQuery = await db_config_1.default.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = userQuery.rows[0];
-        if (!user) {
-            res.status(404).json({ message: 'User not found' });
-            return;
-        }
-        const isMatch = await bcryptjs_1.default.compare(password, user.password_hash);
-        if (!isMatch) {
-            res.status(401).json({ message: 'Invalid credentials' });
-            return;
-        }
-        const token = jsonwebtoken_1.default.sign({ id: user.id, user_type: user.user_type }, JWT_SECRET, { expiresIn: '1d' });
-        res.status(200).json({
-            message: 'Login successful',
-            token,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                user_type: user.user_type,
-            },
-        });
+    // Validate role
+    const validRoles = ['jobseeker', 'employer', 'admin'];
+    const userRole = role || 'jobseeker'; // Default to jobseeker
+    if (!validRoles.includes(userRole)) {
+        throw new errorMiddlewares_1.AppError('Invalid role', 400);
     }
-    catch (error) {
-        console.error('Login Error:', error);
-        res.status(500).json({ message: 'Server error' });
+    // Hash password
+    const hashedPassword = await (0, helpers_1.hashPassword)(password);
+    // Create user
+    const result = await db_config_1.default.query('INSERT INTO users (email, password, role, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id, email, role, created_at', [email, hashedPassword, userRole]);
+    const newUser = result.rows[0];
+    // Create profile based on role
+    if (userRole === 'jobseeker') {
+        await db_config_1.default.query('INSERT INTO jobseeker_profiles (user_id, full_name, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())', [newUser.id, '']);
     }
-};
-exports.login = login;
+    // Generate token
+    const token = (0, helpers_1.generateToken)(newUser);
+    res.status(201).json((0, helpers_1.formatSuccess)({
+        id: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+        token
+    }, 'User registered successfully'));
+});
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+exports.login = (0, asyncHandlers_1.default)(async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        throw new errorMiddlewares_1.AppError('Please provide email and password', 400);
+    }
+    // Find user
+    const result = await db_config_1.default.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+        throw new errorMiddlewares_1.AppError('Invalid credentials', 401);
+    }
+    const user = result.rows[0];
+    // Check password
+    const isPasswordValid = await (0, helpers_1.comparePassword)(password, user.password);
+    if (!isPasswordValid) {
+        throw new errorMiddlewares_1.AppError('Invalid credentials', 401);
+    }
+    // Generate token
+    const token = (0, helpers_1.generateToken)(user);
+    res.json((0, helpers_1.formatSuccess)({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        token
+    }, 'Login successful'));
+});
+// @desc    Get current user profile
+// @route   GET /api/auth/me
+// @access  Private
+exports.getCurrentUser = (0, asyncHandlers_1.default)(async (req, res) => {
+    const userId = req.user.id;
+    const result = await db_config_1.default.query('SELECT id, email, role, created_at FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+        throw new errorMiddlewares_1.AppError('User not found', 404);
+    }
+    res.json((0, helpers_1.formatSuccess)(result.rows[0], 'Current user retrieved successfully'));
+});
+// @desc    Change password
+// @route   PUT /api/auth/password
+// @access  Private
+exports.changePassword = (0, asyncHandlers_1.default)(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+    if (!currentPassword || !newPassword) {
+        throw new errorMiddlewares_1.AppError('Please provide current and new password', 400);
+    }
+    // Get current user with password
+    const result = await db_config_1.default.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+        throw new errorMiddlewares_1.AppError('User not found', 404);
+    }
+    const user = result.rows[0];
+    // Verify current password
+    const isPasswordValid = await (0, helpers_1.comparePassword)(currentPassword, user.password);
+    if (!isPasswordValid) {
+        throw new errorMiddlewares_1.AppError('Current password is incorrect', 401);
+    }
+    // Hash new password
+    const hashedPassword = await (0, helpers_1.hashPassword)(newPassword);
+    // Update password
+    await db_config_1.default.query('UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2', [hashedPassword, userId]);
+    res.json((0, helpers_1.formatSuccess)(null, 'Password updated successfully'));
+});

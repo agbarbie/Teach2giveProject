@@ -1,18 +1,28 @@
 import express from 'express';
-import {
-  createJob,
-  getAllJobs,
-  getJobById,
+import { 
+  getAllJobs, 
+  getJobById, 
+  createJob, 
   updateJob,
   deleteJob,
+  addJobSkill,
+  removeJobSkill
 } from '../controllers/JobController';
+import { protect, restrictTo } from '../middlewares/protect';
 
 const router = express.Router();
 
-router.post('/', createJob);
+// Public routes
 router.get('/', getAllJobs);
-router.get('/:jobId', getJobById);
-router.put('/:jobId', updateJob);
-router.delete('/:jobId', deleteJob);
+router.get('/:id', getJobById);
+
+// Employer routes
+router.post('/', protect, restrictTo('employer'), createJob);
+router.put('/:id', protect, updateJob); // Owner check in controller
+router.delete('/:id', protect, deleteJob); // Owner check in controller
+
+// Job skills management
+router.post('/:id/skills', protect, addJobSkill); // Owner check in controller
+router.delete('/:id/skills/:skillId', protect, removeJobSkill); // Owner check in controller
 
 export default router;

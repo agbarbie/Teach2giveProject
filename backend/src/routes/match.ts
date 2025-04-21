@@ -1,13 +1,20 @@
 import express from 'express';
-import {
-  getJobMatchesForUser,
-  getRecommendedSkills,
+import { 
+  getMyMatches, 
+  calculateJobMatch, 
+  updateMatchStatus,
+  generateAllMatches
 } from '../controllers/JobMatchController';
+import { protect, restrictTo } from '../middlewares/protect';
 
 const router = express.Router();
 
-// Define the routes and link to controllers
-router.get('/matches/:user_id', getJobMatchesForUser);
-router.get('/recommended-skills/:user_id', getRecommendedSkills);
+// Job seeker routes
+router.get('/', protect, restrictTo('jobseeker'), getMyMatches);
+router.get('/job/:jobId', protect, restrictTo('jobseeker'), calculateJobMatch);
+router.put('/:id/status', protect, restrictTo('jobseeker'), updateMatchStatus);
+
+// Admin routes
+router.post('/generate', protect, restrictTo('admin'), generateAllMatches);
 
 export default router;

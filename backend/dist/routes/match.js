@@ -5,8 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const JobMatchController_1 = require("../controllers/JobMatchController");
+const protect_1 = require("../middlewares/protect");
 const router = express_1.default.Router();
-// Define the routes and link to controllers
-router.get('/matches/:user_id', JobMatchController_1.getJobMatchesForUser);
-router.get('/recommended-skills/:user_id', JobMatchController_1.getRecommendedSkills);
+// Job seeker routes
+router.get('/', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), JobMatchController_1.getMyMatches);
+router.get('/job/:jobId', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), JobMatchController_1.calculateJobMatch);
+router.put('/:id/status', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), JobMatchController_1.updateMatchStatus);
+// Admin routes
+router.post('/generate', protect_1.protect, (0, protect_1.restrictTo)('admin'), JobMatchController_1.generateAllMatches);
 exports.default = router;

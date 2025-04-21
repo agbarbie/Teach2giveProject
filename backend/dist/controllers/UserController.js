@@ -3,46 +3,146 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersByType = exports.getUserById = exports.getAllUsers = void 0;
+exports.getUserSkills = exports.deleteUser = exports.updateUser = exports.getUserById = exports.getAllUsers = void 0;
+const asyncHandlers_1 = __importDefault(require("../middlewares/asyncHandlers"));
 const db_config_1 = __importDefault(require("../db/db.config"));
-// Get all users
-const getAllUsers = async (req, res) => {
-    try {
-        const result = await db_config_1.default.query('SELECT id, name, email, user_type, created_at FROM users');
-        res.status(200).json({ users: result.rows });
+const errorMiddlewares_1 = require("../middlewares/errorMiddlewares");
+const helpers_1 = require("../utils/helpers");
+// @desc    Get all users (admin only)
+// @route   GET /api/users
+// @access  Private/Admin
+exports.getAllUsers = (0, asyncHandlers_1.default)(async (req, res) => {
+    const result = await db_config_1.default.query('SELECT id, email, role, created_at, updated_at FROM users ORDER BY id');
+    res.json((0, helpers_1.formatSuccess)(result.rows, 'Users retrieved successfully'));
+});
+// @desc    Get user by ID
+// @route   GET /api/users/:id
+// @access  Private/Admin or Own User
+exports.getUserById = (0, asyncHandlers_1.default)(async (req, res) => {
+    const userId = parseInt(req.params.id);
+    // Security check - users can only access their own data unless they're admins
+    if (req.user?.id !== userId && req.user?.role !== 'admin') {
+        throw new errorMiddlewares_1.AppError('Not authorized to access this resource', 403);
     }
-    catch (error) {
-        console.error('Get Users Error:', error);
-        res.status(500).json({ message: 'Error fetching users' });
+    const result = await db_config_1.default.query('SELECT id, email, role, created_at, updated_at FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+        throw new errorMiddlewares_1.AppError('User not found', 404);
     }
-};
-exports.getAllUsers = getAllUsers;
-// Get a user by ID
-const getUserById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const result = await db_config_1.default.query('SELECT id, name, email, user_type, created_at FROM users WHERE id = $1', [id]);
-        if (result.rows.length === 0) {
-            res.status(404).json({ message: 'User not found' });
+    const user = result.rows[0];
+    res.json((0, helpers_1.formatSuccess)(user, 'User retrieved successfully'));
+});
+// @desc    Update user
+// @route   PUT /api/users/:id
+exports.updateUser = (0, asyncHandlers_1.default)(async (req, res) => {
+    const userId = parseInt(req.params.id);
+    const { email, role } = req.body;
+    // Security check - users can only update their own data unless they're admins
+    if (req.user?.id !== userId && req.user?.role !== 'admin') {
+        throw new errorMiddlewares_1.AppError('Not authorized to update this resource', 403);
+    }
+    // Only admins can change roles
+    if (role && req.user?.role !== 'admin') {
+        throw new errorMiddlewares_1.AppError('Not authorized to change role', 403);
+    }
+    // Check if user exists
+    const userExists = await db_config_1.default.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (userExists.rows.length === 0) {
+        throw new errorMiddlewares_1.AppError('User not found', 404);
+    }
+    // Check if email is already taken by another user
+    if (email) {
+        const emailExists = await db_config_1.default.query('SELECT * FROM users WHERE email = $1 AND id != $2', [email, userId]);
+        if (emailExists.rows.length > 0) {
+            throw new errorMiddlewares_1.AppError('Email is already taken', 400);
         }
-        res.status(200).json({ user: result.rows[0] });
     }
-    catch (error) {
-        console.error('Get User Error:', error);
-        res.status(500).json({ message: 'Error fetching user' });
+    // Build the update query dynamically based on provided fields
+    let updateFields = [];
+    let queryParams = [];
+    let paramCounter = 1;
+    if (email) {
+        updateFields.push(`email = $${paramCounter}`);
+        queryParams.push(email);
+        paramCounter++;
     }
-};
-exports.getUserById = getUserById;
-// Get users by user type (e.g., "employer", "job_seeker", "admin")
-const getUsersByType = async (req, res) => {
+    if (role) {
+        updateFields.push(`role = $${paramCounter}`);
+        queryParams.push(role);
+        paramCounter++;
+    }
+    // Add updated_at timestamp
+    updateFields.push(`updated_at = NOW()`);
+    // If no fields to update, return early
+    if (updateFields.length === 0) {
+        throw new errorMiddlewares_1.AppError('No fields to update', 400);
+    }
+    // Build and execute the query
+    const updateQuery = `
+    UPDATE users 
+    SET ${updateFields.join(', ')} 
+    WHERE id = $${paramCounter} 
+    RETURNING id, email, role, created_at, updated_at
+  `;
+    queryParams.push(userId);
+    const result = await db_config_1.default.query(updateQuery, queryParams);
+    const updatedUser = result.rows[0];
+    res.json((0, helpers_1.formatSuccess)(updatedUser, 'User updated successfully'));
+});
+// @desc    Delete user
+// @route   DELETE /api/users/:id
+// @access  Private/Admin or Own User
+exports.deleteUser = (0, asyncHandlers_1.default)(async (req, res) => {
+    const userId = parseInt(req.params.id);
+    // Security check - users can only delete their own account unless they're admins
+    if (req.user?.id !== userId && req.user?.role !== 'admin') {
+        throw new errorMiddlewares_1.AppError('Not authorized to delete this resource', 403);
+    }
+    // Check if user exists
+    const userExists = await db_config_1.default.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (userExists.rows.length === 0) {
+        throw new errorMiddlewares_1.AppError('User not found', 404);
+    }
+    // Use a transaction to delete user and related data
+    const client = await db_config_1.default.connect();
     try {
-        const { user_type } = req.params;
-        const result = await db_config_1.default.query('SELECT id, name, email, user_type, created_at FROM users WHERE user_type = $1', [user_type]);
-        res.status(200).json({ users: result.rows });
+        await client.query('BEGIN');
+        // Delete related data first (due to foreign key constraints)
+        // This is simplified - in a real app you'd need to handle all related tables
+        await client.query('DELETE FROM jobseeker_profiles WHERE user_id = $1', [userId]);
+        await client.query('DELETE FROM user_skills WHERE user_id = $1', [userId]);
+        await client.query('DELETE FROM job_matches WHERE user_id = $1', [userId]);
+        await client.query('DELETE FROM applications WHERE user_id = $1', [userId]);
+        // Delete companies owned by this user (if employer)
+        if (userExists.rows[0].role === 'employer') {
+            await client.query('DELETE FROM companies WHERE owner_id = $1', [userId]);
+        }
+        // Finally delete the user
+        await client.query('DELETE FROM users WHERE id = $1', [userId]);
+        await client.query('COMMIT');
+        res.json((0, helpers_1.formatSuccess)(null, 'User deleted successfully'));
     }
     catch (error) {
-        console.error('Get Users By Type Error:', error);
-        res.status(500).json({ message: 'Error fetching users by type' });
+        await client.query('ROLLBACK');
+        throw error;
     }
-};
-exports.getUsersByType = getUsersByType;
+    finally {
+        client.release();
+    }
+});
+// @desc    Get user skills
+// @route   GET /api/users/:id/skills
+// @access  Private/Admin or Own User
+exports.getUserSkills = (0, asyncHandlers_1.default)(async (req, res) => {
+    const userId = parseInt(req.params.id);
+    // Security check
+    if (req.user?.id !== userId && req.user?.role !== 'admin') {
+        throw new errorMiddlewares_1.AppError('Not authorized to access this resource', 403);
+    }
+    const result = await db_config_1.default.query(`SELECT us.id, us.user_id, us.skill_id, us.proficiency_level, us.years_experience, us.created_at,
+            s.name as skill_name, s.category 
+     FROM user_skills us
+     JOIN skills s ON us.skill_id = s.id
+     WHERE us.user_id = $1
+     ORDER BY s.category, s.name`, [userId]);
+    res.json((0, helpers_1.formatSuccess)(result.rows, 'User skills retrieved successfully'));
+});

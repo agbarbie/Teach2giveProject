@@ -1,79 +1,195 @@
 import { Request, Response } from 'express';
-import db from '../db/db.config';
+import asyncHandler from '../middlewares/asyncHandlers';
+import pool from '../db/db.config';
+import { AppError } from '../middlewares/errorMiddlewares';
+import { formatSuccess } from '../utils/helpers';
+import { RequestWithUser } from '../utils/Types/index';
 
-// Add a skill to a user
-export const addSkillToUser = async (req: Request, res: Response):Promise<void>=> {
-  try {
-    const { user_id, skill_name } = req.body;
+// @desc    Get all skills
+// @route   GET /api/skills
+// @access  Public
+export const getAllSkills = asyncHandler(async (req: Request, res: Response) => {
+  const { category } = req.query;
+  
+  let query = 'SELECT * FROM skills';
+  const queryParams: any[] = [];
+  
+  if (category) {
+    query += ' WHERE LOWER(category) = LOWER($1)';
+    queryParams.push(category);
+  }
+  
+  query += ' ORDER BY category, name';
+  
+  const result = await pool.query(query, queryParams);
 
-    // First check if skill exists, if not insert
-    const skillResult = await db.query(
-      `INSERT INTO skills (name)
-       VALUES ($1)
-       ON CONFLICT (name) DO NOTHING
-       RETURNING id`,
-      [skill_name]
+  res.json(formatSuccess(result.rows, 'Skills retrieved successfully'));
+});
+
+// @desc    Get skill by ID
+// @route   GET /api/skills/:id
+// @access  Public
+export const getSkillById = asyncHandler(async (req: Request, res: Response) => {
+  const skillId = parseInt(req.params.id);
+
+  const result = await pool.query(
+    'SELECT * FROM skills WHERE id = $1',
+    [skillId]
+  );
+
+  if (result.rows.length === 0) {
+    throw new AppError('Skill not found', 404);
+  }
+
+  res.json(formatSuccess(result.rows[0], 'Skill retrieved successfully'));
+});
+
+// @desc    Create skill (admin only)
+// @route   POST /api/skills
+// @access  Private/Admin
+export const createSkill = asyncHandler(async (req: RequestWithUser, res: Response) => {
+  const { name, category } = req.body;
+
+  if (!name || !category) {
+    throw new AppError('Please provide skill name and category', 400);
+  }
+
+  // Check if skill already exists
+  const skillExists = await pool.query(
+    'SELECT * FROM skills WHERE LOWER(name) = LOWER($1) AND LOWER(category) = LOWER($2)',
+    [name, category]
+  );
+  
+  if (skillExists.rows.length > 0) {
+    throw new AppError('Skill with this name and category already exists', 400);
+  }
+
+  // Create skill
+  const result = await pool.query(
+    `INSERT INTO skills (name, category, created_at, updated_at)
+     VALUES ($1, $2, NOW(), NOW())
+     RETURNING *`,
+    [name, category]
+  );
+
+  res.status(201).json(formatSuccess(result.rows[0], 'Skill created successfully'));
+});
+
+// @desc    Update skill (admin only)
+// @route   PUT /api/skills/:id
+// @access  Private/Admin
+export const updateSkill = asyncHandler(async (req: RequestWithUser, res: Response) => {
+  const skillId = parseInt(req.params.id);
+  const { name, category } = req.body;
+
+  // Check if skill exists
+  const skillExists = await pool.query(
+    'SELECT * FROM skills WHERE id = $1',
+    [skillId]
+  );
+  
+  if (skillExists.rows.length === 0) {
+    throw new AppError('Skill not found', 404);
+  }
+
+  // If updating name and category, check for duplicates
+  if (name && category) {
+    const duplicateCheck = await pool.query(
+      'SELECT * FROM skills WHERE LOWER(name) = LOWER($1) AND LOWER(category) = LOWER($2) AND id != $3',
+      [name, category, skillId]
     );
-
-    // Get skill id
-    const skillId = skillResult.rows[0]?.id || (await db.query(
-      `SELECT id FROM skills WHERE name = $1`, [skill_name]
-    )).rows[0]?.id;
-
-    if (!skillId) {
-      res.status(500).json({ message: 'Skill could not be found or created' });
-      return;
+    
+    if (duplicateCheck.rows.length > 0) {
+      throw new AppError('Skill with this name and category already exists', 400);
     }
-
-    // Add skill to user
-    await db.query(
-      `INSERT INTO user_skills (user_id, skill_id) VALUES ($1, $2)`,
-      [user_id, skillId]
-    );
-
-    res.status(200).json({ message: 'Skill added to user' });
-  } catch (error) {
-    console.error('Add Skill Error:', error);
-    res.status(500).json({ message: 'Server error adding skill' });
   }
-};
 
-// Get user skills
-export const getUserSkills = async (req: Request, res: Response):Promise<void> => {
-  try {
-    const { userId } = req.params;
+  // Build the update query dynamically
+  let updateFields = [];
+  let queryParams = [];
+  let paramCounter = 1;
 
-    const result = await db.query(
-      `SELECT s.name FROM skills s
-       INNER JOIN user_skills us ON s.id = us.skill_id
-       WHERE us.user_id = $1`,
-      [userId]
-    );
-
-    res.status(200).json(result.rows.map(row => row.name));
-  } catch (error) {
-    console.error('Get Skills Error:', error);
-    res.status(500).json({ message: 'Server error fetching user skills' });
+  if (name) {
+    updateFields.push(`name = $${paramCounter}`);
+    queryParams.push(name);
+    paramCounter++;
   }
-};
 
-// Match jobs to user's skills
-export const getMatchingJobs = async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    const result = await db.query(
-      `SELECT DISTINCT j.* FROM jobs j
-       JOIN job_skills js ON j.id = js.job_id
-       WHERE js.skill_id IN (
-         SELECT skill_id FROM user_skills WHERE user_id = $1
-       )`,
-      [userId]
-    );
-
-    res.status(200).json(result.rows);
-  } catch (error) {
-    console.error('Match Jobs Error:', error);
-    res.status(500).json({ message: 'Server error matching jobs' });
+  if (category) {
+    updateFields.push(`category = $${paramCounter}`);
+    queryParams.push(category);
+    paramCounter++;
   }
-};
+
+  // Add updated_at timestamp
+  updateFields.push(`updated_at = NOW()`);
+
+  // If no fields to update, return early
+  if (updateFields.length === 0) {
+    throw new AppError('No fields to update', 400);
+  }
+
+  // Build and execute the query
+  const updateQuery = `
+    UPDATE skills 
+    SET ${updateFields.join(', ')} 
+    WHERE id = $${paramCounter} 
+    RETURNING *
+  `;
+  queryParams.push(skillId);
+
+  const result = await pool.query(updateQuery, queryParams);
+  const updatedSkill = result.rows[0];
+
+  res.json(formatSuccess(updatedSkill, 'Skill updated successfully'));
+});
+
+// @desc    Delete skill (admin only)
+// @route   DELETE /api/skills/:id
+// @access  Private/Admin
+export const deleteSkill = asyncHandler(async (req: RequestWithUser, res: Response) => {
+  const skillId = parseInt(req.params.id);
+
+  // Check if skill exists
+  const skillExists = await pool.query(
+    'SELECT * FROM skills WHERE id = $1',
+    [skillId]
+  );
+  
+  if (skillExists.rows.length === 0) {
+    throw new AppError('Skill not found', 404);
+  }
+
+  // Check if skill is in use
+  const skillInUseChecks = [
+    pool.query('SELECT 1 FROM user_skills WHERE skill_id = $1 LIMIT 1', [skillId]),
+    pool.query('SELECT 1 FROM job_skills WHERE skill_id = $1 LIMIT 1', [skillId]),
+    pool.query('SELECT 1 FROM learning_resources WHERE skill_id = $1 LIMIT 1', [skillId])
+  ];
+
+  const results = await Promise.all(skillInUseChecks);
+  
+  const isSkillInUse = results.some(result => result.rows.length > 0);
+  
+  if (isSkillInUse) {
+    throw new AppError('Cannot delete skill as it is in use', 400);
+  }
+
+  // Delete skill
+  await pool.query('DELETE FROM skills WHERE id = $1', [skillId]);
+
+  res.json(formatSuccess(null, 'Skill deleted successfully'));
+});
+
+// @desc    Get all skill categories
+// @route   GET /api/skills/categories
+// @access  Public
+export const getSkillCategories = asyncHandler(async (req: Request, res: Response) => {
+  const result = await pool.query(
+    'SELECT DISTINCT category FROM skills ORDER BY category'
+  );
+
+  const categories = result.rows.map(row => row.category);
+
+  res.json(formatSuccess(categories, 'Skill categories retrieved successfully'));
+});

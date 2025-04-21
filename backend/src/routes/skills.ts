@@ -1,14 +1,24 @@
 import express from 'express';
-import {
-  addSkillToUser,
-  getUserSkills,
-  getMatchingJobs,
+import { 
+  getAllSkills, 
+  getSkillById, 
+  createSkill, 
+  updateSkill,
+  deleteSkill,
+  getSkillCategories
 } from '../controllers/SkillController';
+import { protect, restrictTo } from '../middlewares/protect';
 
 const router = express.Router();
 
-router.post('/', addSkillToUser);
-router.get('/user/:userId', getUserSkills);
-router.get('/match/:userId', getMatchingJobs);
+// Public routes
+router.get('/', getAllSkills);
+router.get('/categories', getSkillCategories);
+router.get('/:id', getSkillById);
+
+// Admin only routes
+router.post('/', protect, restrictTo('admin'), createSkill);
+router.put('/:id', protect, restrictTo('admin'), updateSkill);
+router.delete('/:id', protect, restrictTo('admin'), deleteSkill);
 
 export default router;

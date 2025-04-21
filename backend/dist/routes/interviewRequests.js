@@ -5,8 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const InterviewRequestController_1 = require("../controllers/InterviewRequestController");
+const protect_1 = require("../middlewares/protect");
 const router = express_1.default.Router();
-router.post('/', InterviewRequestController_1.createInterviewRequest);
-router.get('/', InterviewRequestController_1.getAllInterviewRequests);
-router.get('/applicant/:applicant_id', InterviewRequestController_1.getInterviewsByApplicant);
+// All routes are protected
+router.get('/application/:applicationId', protect_1.protect, InterviewRequestController_1.getInterviewsByApplication); // Permission check in controller
+router.get('/my', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), InterviewRequestController_1.getMyInterviews);
+router.get('/company', protect_1.protect, (0, protect_1.restrictTo)('employer'), InterviewRequestController_1.getCompanyInterviews);
+router.post('/', protect_1.protect, (0, protect_1.restrictTo)('employer', 'admin'), InterviewRequestController_1.createInterviewRequest);
+router.put('/:id/status', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), InterviewRequestController_1.updateInterviewStatus);
+router.put('/:id/reschedule', protect_1.protect, (0, protect_1.restrictTo)('employer', 'admin'), InterviewRequestController_1.rescheduleInterview);
+router.delete('/:id', protect_1.protect, InterviewRequestController_1.cancelInterview); // Permission check in controller
 exports.default = router;

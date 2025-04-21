@@ -1,14 +1,22 @@
 import express from 'express';
-import { getAllUsers, getUserById, getUsersByType, updateUser, deleteUser, createUser } from '../controllers/UserController';
+import { 
+  getAllUsers, 
+  getUserById, 
+  updateUser, 
+  deleteUser,
+  getUserSkills
+} from '../controllers/UserController';
+import { protect, restrictTo } from '../middlewares/protect';
 
 const router = express.Router();
 
-// Define the routes and their corresponding controller functions
-router.get('/', getAllUsers);  // Get all users
-router.get('/:id', getUserById);  // Get a user by ID
-router.get('/type/:user_type', getUsersByType);  // Get users by user type
-router.post('/', createUser);  // Create a new user
-router.put('/:id', updateUser);  // Update a user by ID
-router.delete('/:id', deleteUser);  // Delete a user by ID
+// Admin only routes
+router.get('/', protect, restrictTo('admin'), getAllUsers);
+
+// User routes (protected)
+router.get('/:id', protect, getUserById);
+router.put('/:id', protect, updateUser);
+router.delete('/:id', protect, deleteUser);
+router.get('/:id/skills', protect, getUserSkills);
 
 export default router;

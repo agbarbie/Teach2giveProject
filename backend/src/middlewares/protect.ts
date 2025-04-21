@@ -1,106 +1,88 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import pool from "../db/db.config";
-import { UserRequest } from "../utils/Types/UserTypes";
-import asyncHandler from "./asyncHandlers";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-// Auth middleware to protect routes 
-export const protect = asyncHandler(async (req: UserRequest, res: Response, next: NextFunction) => {
-    let token;
+// Define simplified interfaces for better TypeScript support
+interface DecodedUser {
+  id: number;
+  email: string;
+  role: 'jobseeker' | 'employer' | 'admin';
+  iat: number;
+  exp: number;
+}
 
-    // Try to get token from Authorization Header
-    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-        token = req.headers.authorization.split(" ")[1];
-    }
+// Extend the Express Request interface
+interface AuthRequest extends Request {
+  user?: {
+    id: number;
+    role: 'jobseeker' | 'employer' | 'admin';
+  };
+}
 
-    // Get the token from cookies if not found in header
-    else if (req.cookies?.access_token) {
-        token = req.cookies.access_token;
-    }
+// Custom error class
+class AppError extends Error {
+  statusCode: number;
+  status: string;
+  isOperational: boolean;
 
-    // If no token found
-    if (!token) {
-        return res.status(401).json({ 
-            success: false,
-            message: "Not authorized, no token" 
-        });
-    }
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.statusCode = statusCode;
+    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
+    this.isOperational = true;
 
-    try {
-        // Verify token
-        if (!process.env.JWT_SECRET) {
-            throw new Error("JWT_SECRET is not defined in environment variables");
-        }
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET) as { 
-            userId: string; 
-            roleId: number 
-        };
+// Async handler to avoid try-catch blocks in each controller
+const asyncHandler = (fn: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+};
 
-        // Get user from database with role information
-        const userQuery = await pool.query(
-            `SELECT 
-                users.id, 
-                users.name, 
-                users.email, 
-                users.role_id, 
-                user_roles.role_name,
-                users.profile_completed
-             FROM users 
-             JOIN user_roles ON users.role_id = user_roles.id 
-             WHERE users.id = $1`,
-            [decoded.userId]
-        );
+// Authentication middleware
+export const protect = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  // 1) Get token from authorization header
+  let token: string | undefined;
+  
+  const authHeader = req.headers.authorization;
+  
+  if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer')) {
+    token = authHeader.split(' ')[1];
+  }
 
-        if (userQuery.rows.length === 0) {
-            return res.status(401).json({ 
-                success: false,
-                message: "User not found" 
-            });
-        }
+  if (!token) {
+    return next(new AppError('You are not logged in! Please log in to get access.', 401));
+  }
 
-        // Attach user to the request object
-        req.user = userQuery.rows[0];
-        next();
-
-    } catch (error) {
-        console.error("JWT Error:", error);
-        
-        // Handle specific JWT errors
-        let errorMessage = "Not authorized, token failed";
-        if (error instanceof jwt.TokenExpiredError) {
-            errorMessage = "Session expired, please login again";
-        } else if (error instanceof jwt.JsonWebTokenError) {
-            errorMessage = "Invalid token";
-        }
-
-        return res.status(401).json({ 
-            success: false,
-            message: errorMessage 
-        });
-    }
+  // 2) Verify token
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-default-secret-key') as DecodedUser;
+    
+    // Set user data on request object
+    req.user = {
+      id: decoded.id,
+      role: decoded.role
+    };
+    
+    next();
+  } catch (error) {
+    return next(new AppError('Invalid token. Please log in again.', 401));
+  }
 });
 
 // Role-based authorization middleware
-export const authorize = (...roles: string[]) => {
-    return (req: UserRequest, res: Response, next: NextFunction) => {
-        if (!req.user || !roles.includes(req.user.role_name)) {
-            return res.status(403).json({
-                success: false,
-                message: `User role ${req.user?.role_name || "unknown"} is not authorized to access this route`
-            });
-        }
-        next();
-    };
-};
-
-// Middleware to check if profile is completed
-export const checkProfileComplete = asyncHandler(async (req: UserRequest, res: Response, next: NextFunction) => {
-    if (!req.user?.profile_completed) {
-        return res.status(403).json({
-            success: false,
-            message: "Please complete your profile to access this feature"
-        });
+export const restrictTo = (...roles: Array<'jobseeker' | 'employer' | 'admin'>) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new AppError('You are not logged in! Please log in to get access.', 401));
     }
+    
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError('You do not have permission to perform this action', 403));
+    }
+    
     next();
-});
+  };
+};
