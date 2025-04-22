@@ -1,244 +1,260 @@
-/* Main container styling */
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Material Icons Import */
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* Root Variables */
+:root {
+  --primary-color: #3f51b5;
+  --primary-dark: #303f9f;
+  --primary-light: #c5cae9;
+  --accent-color: #ff4081;
+  --text-color: #333;
+  --text-secondary: #666;
+  --background-color: #f5f7fa;
+  --card-bg: #ffffff;
+  --error-color: #f44336;
+  --success-color: #4caf50;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Login Container */
 .login-container {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+  background-color: var(--background-color);
 }
 
-/* Logo styling */
-.logo {
-  display: block;
-  max-width: 200px;
-  margin: 0 auto 20px;
+/* Login Card */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
 }
 
-/* Heading styles */
-h1 {
+/* Login Header */
+.login-header {
   text-align: center;
-  color: #2d3748;
-  margin-bottom: 24px;
-  font-size: 24px;
-  font-weight: 600;
+  margin-bottom: 2rem;
 }
 
-/* Form group styling */
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-/* Label styling */
-label {
-  display: block;
-  font-size: 14px;
-  color: #4a5568;
-}
-
-.block {
-  display: block;
-}
-
-.mb-1 {
-  margin-bottom: 4px;
-}
-
-.mb-2 {
-  margin-bottom: 8px;
-}
-
-.font-medium {
+.login-header h1 {
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
   font-weight: 500;
 }
 
-.font-semibold {
-  font-weight: 600;
+.login-header p {
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
-/* Radio button group styling */
-.flex {
+/* Form Styles */
+.login-form {
   display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.justify-between {
-  justify-content: space-between;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-/* Radio label styling */
-.flex label {
-  flex: 1;
-  padding: 8px;
-  margin: 0 4px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
-.flex label:first-child {
-  margin-left: 0;
-}
-
-.flex label:last-child {
-  margin-right: 0;
-}
-
-/* Radio button styling */
-input[type="radio"] {
-  margin-right: 4px;
-  vertical-align: middle;
-}
-
-/* Style when radio is selected */
-input[type="radio"]:checked + span {
-  font-weight: 600;
-}
-
-.flex label:hover {
-  background-color: #f7fafc;
-}
-
-/* Input field styling */
 input[type="email"],
-input[type="password"] {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.2s ease;
+input[type="password"],
+input[type="text"] {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: var(--transition);
 }
 
-input[type="email"]:focus,
-input[type="password"]:focus {
+input:focus {
   outline: none;
-  border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
 }
 
-/* Class-based utility styles */
-.w-full {
+.is-invalid {
+  border-color: var(--error-color) !important;
+}
+
+.error-message {
+  color: var(--error-color);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* Password Input */
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container input {
   width: 100%;
+  padding-right: 3rem;
 }
 
-.border {
-  border: 1px solid #e2e8f0;
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.px-3 {
-  padding-left: 12px;
-  padding-right: 12px;
+.toggle-password:focus {
+  outline: none;
 }
 
-.py-2 {
-  padding-top: 8px;
-  padding-bottom: 8px;
+.material-icon {
+  font-family: 'Material Icons';
+  font-size: 1.25rem;
 }
 
-.rounded {
-  border-radius: 6px;
+/* Role Selector */
+.role-selector {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-/* Validation error message styling */
-.text-red-600 {
-  color: #e53e3e;
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.text-sm {
-  font-size: 12px;
+.role-label {
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 
-/* Button styling */
-button {
-  width: 100%;
-  padding: 12px;
-  background-color: #3182ce;
+/* Alert */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+}
+
+.alert-danger {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+/* Login Button */
+.login-button {
+  padding: 0.75rem;
+  background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 16px;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--transition);
+  position: relative;
+  min-height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-button:hover:not(:disabled) {
-  background-color: #2c5282;
+.login-button:hover:not([disabled]) {
+  background-color: var(--primary-dark);
 }
 
-button:disabled {
-  background-color: #a0aec0;
-  cursor: not-allowed;
-}
-
-/* Signup link section */
-.mt-4 {
-  margin-top: 16px;
-}
-
-.text-center {
-  text-align: center;
-}
-
-a {
-  color: #3182ce;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-/* Error message styling */
-.error-message {
-  background-color: rgba(229, 62, 62, 0.1);
-  color: #e53e3e;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  border-left: 3px solid #e53e3e;
-  animation: fadeIn 0.3s ease;
-}
-
-/* Input error state */
-.input-error {
-  border-color: #e53e3e !important;
-}
-
-/* Loading state for button */
-button:disabled {
+.login-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* Add a simple loading animation */
+/* Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-button span {
-  display: inline-block;
+/* Links */
+.forgot-password, .signup-link {
+  text-align: center;
+  font-size: 0.9rem;
 }
 
-/* Add additional fade in animation for elements */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.forgot-password a, .signup-link a {
+  color: var(--primary-color);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-/* You can add this class to any element you want to animate in */
-.fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+.forgot-password a:hover, .signup-link a:hover {
+  text-decoration: underline;
+  color: var(--primary-dark);
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 480px) {
-  .login-container {
-    max-width: 100%;
-    margin: 20px;
-    padding: 20px;
+  .login-card {
+    padding: 1.5rem;
+  }
+  
+  .login-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .role-selector {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }

@@ -1,0 +1,196 @@
+<div class="auth-container">
+    <div class="auth-card">
+      <!-- Card Header with Logo & Title -->
+      <div class="card-header">
+        <div class="logo" (click)="goToLanding()">SkillMatch AI</div>
+        <h1>{{ isLoginView ? 'Welcome Back' : 'Create Account' }}</h1>
+        <p>{{ isLoginView ? 'Sign in to your account' : 'Join our platform today' }}</p>
+      </div>
+  
+      <!-- Role Selector -->
+      <div class="role-selector">
+        <div 
+          *ngFor="let role of roles" 
+          class="role-option" 
+          [class.active]="activeRole === role"
+          [class.admin]="role === 'admin'"
+          [class.employer]="role === 'employer'"
+          [class.jobseeker]="role === 'jobseeker'"
+          (click)="setActiveRole(role)"
+        >
+          <i class="role-icon {{ role }}"></i>
+          <span>{{ role | titlecase }}</span>
+        </div>
+      </div>
+  
+      <!-- Login Form -->
+      <form *ngIf="isLoginView" [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()" class="auth-form" [@fadeInOut]>
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input 
+            type="email" 
+            id="login-email" 
+            formControlName="email" 
+            placeholder="Enter your email"
+            [class.is-invalid]="loginF['email'].touched && loginF['email'].errors"
+          >
+          <div *ngIf="loginF['email'].touched && loginF['email'].errors" class="error-message">
+            <div *ngIf="loginF['email'].errors['required']">Email is required</div>
+            <div *ngIf="loginF['email'].errors['email']">Please enter a valid email address</div>
+          </div>
+        </div>
+  
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <div class="password-input-container">
+            <input 
+              [type]="showPassword ? 'text' : 'password'"
+              id="login-password" 
+              formControlName="password" 
+              placeholder="Enter your password"
+              [class.is-invalid]="loginF['password'].touched && loginF['password'].errors"
+            >
+            <button 
+              type="button" 
+              class="toggle-password" 
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            >
+              <span class="material-icon">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          <div *ngIf="loginF['password'].touched && loginF['password'].errors" class="error-message">
+            <div *ngIf="loginF['password'].errors['required']">Password is required</div>
+            <div *ngIf="loginF['password'].errors['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+  
+        <!-- Forgot Password -->
+        <div class="forgot-password">
+          <a (click)="goToForgotPassword()">Forgot Password?</a>
+        </div>
+  
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+  
+        <!-- Login Button -->
+        <button 
+          type="submit" 
+          class="submit-button"
+          [class.admin]="activeRole === 'admin'"
+          [class.employer]="activeRole === 'employer'"
+          [class.jobseeker]="activeRole === 'jobseeker'"
+          [disabled]="loading"
+        >
+          <span *ngIf="!loading">Sign In</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </form>
+  
+      <!-- Signup Form -->
+      <form *ngIf="!isLoginView" [formGroup]="signupForm" (ngSubmit)="onSignupSubmit()" class="auth-form" [@fadeInOut]>
+        <!-- Name Field -->
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            formControlName="name" 
+            placeholder="Enter your full name"
+            [class.is-invalid]="signupF['name'].touched && signupF['name'].errors"
+          >
+          <div *ngIf="signupF['name'].touched && signupF['name'].errors" class="error-message">
+            <div *ngIf="signupF['name'].errors['required']">Name is required</div>
+          </div>
+        </div>
+        
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input 
+            type="email" 
+            id="signup-email" 
+            formControlName="email" 
+            placeholder="Enter your email"
+            [class.is-invalid]="signupF['email'].touched && signupF['email'].errors"
+          >
+          <div *ngIf="signupF['email'].touched && signupF['email'].errors" class="error-message">
+            <div *ngIf="signupF['email'].errors['required']">Email is required</div>
+            <div *ngIf="signupF['email'].errors['email']">Please enter a valid email address</div>
+          </div>
+        </div>
+  
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <div class="password-input-container">
+            <input 
+              [type]="showPassword ? 'text' : 'password'"
+              id="signup-password" 
+              formControlName="password" 
+              placeholder="Create a password"
+              [class.is-invalid]="signupF['password'].touched && signupF['password'].errors"
+            >
+            <button 
+              type="button" 
+              class="toggle-password" 
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            >
+              <span class="material-icon">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          <div *ngIf="signupF['password'].touched && signupF['password'].errors" class="error-message">
+            <div *ngIf="signupF['password'].errors['required']">Password is required</div>
+            <div *ngIf="signupF['password'].errors['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+  
+        <!-- Confirm Password Field -->
+        <div class="form-group">
+          <label for="confirm-password">Confirm Password</label>
+          <div class="password-input-container">
+            <input 
+              [type]="showPassword ? 'text' : 'password'"
+              id="confirm-password" 
+              formControlName="confirmPassword" 
+              placeholder="Confirm your password"
+              [class.is-invalid]="signupF['confirmPassword'].touched && (signupF['confirmPassword'].errors || signupForm.hasError('mismatch'))"
+            >
+          </div>
+          <div *ngIf="signupF['confirmPassword'].touched && (signupF['confirmPassword'].errors || signupForm.hasError('mismatch'))" class="error-message">
+            <div *ngIf="signupF['confirmPassword'].errors?.['required']">Confirm password is required</div>
+            <div *ngIf="signupForm.hasError('mismatch')">Passwords do not match</div>
+          </div>
+        </div>
+  
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+  
+        <!-- Signup Button -->
+        <button 
+          type="submit" 
+          class="submit-button"
+          [class.admin]="activeRole === 'admin'"
+          [class.employer]="activeRole === 'employer'"
+          [class.jobseeker]="activeRole === 'jobseeker'"
+          [disabled]="loading"
+        >
+          <span *ngIf="!loading">Create Account</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </form>
+  
+      <!-- Toggle between Login and Signup -->
+      <div class="toggle-auth-mode">
+        <p *ngIf="isLoginView">Don't have an account? <a (click)="toggleView()">Sign Up</a></p>
+        <p *ngIf="!isLoginView">Already have an account? <a (click)="toggleView()">Sign In</a></p>
+      </div>
+    </div>
+  </div>

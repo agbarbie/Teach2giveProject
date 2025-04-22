@@ -17,7 +17,7 @@ router.get('/', getAllJobs);
 router.get('/:id', getJobById);
 
 // Employer routes
-router.post('/', protect, restrictTo('employer'), createJob);
+router.post('/', restrictTo('employer'), createJob);
 router.put('/:id', protect, updateJob); // Owner check in controller
 router.delete('/:id', protect, deleteJob); // Owner check in controller
 

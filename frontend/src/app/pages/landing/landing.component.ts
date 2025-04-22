@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { error } from 'console';
+import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule,HttpClientModule],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.css']
 })
@@ -70,11 +72,18 @@ export class LandingComponent {
     this.router.navigate([path]);
   }
 
-  // Specific navigation methods for buttons that might need additional logic
   navigateToLogin(): void {
-    this.navigateTo('/login');
+    console.log('Navigating to login...');
+    this.router.navigate(['/login']).then(success => {
+      console.log('Navigation result:', success);
+      if (!success) {
+        console.error('Navigation to /login failed');
+      }
+    }).catch(error => {
+      console.error('Navigation error:', error);
+    });
   }
-
+  
   navigateToSignup(): void {
     this.navigateTo('/signup');
   }

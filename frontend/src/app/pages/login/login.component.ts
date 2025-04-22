@@ -3,69 +3,75 @@ import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import { HttpClientModule } from '@angular/common/http';
-import { AuthService } from '../../services/auth.service'; // Make sure this path is correct for your project structure
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    ReactiveFormsModule, 
-    CommonModule, 
-    RouterModule,
-    HttpClientModule
-  ],
+  imports: [ReactiveFormsModule, CommonModule, RouterModule, HttpClientModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   loading = false;
+  submitted = false;
   errorMessage = '';
+  showPassword = false;
+  roles = ['jobseeker', 'employer', 'admin'];
   
   constructor(
     private fb: FormBuilder, 
     private router: Router,
     private authService: AuthService
   ) {
+    // Initialize form with validators
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      role: ['', Validators.required]
+      role: ['jobseeker', Validators.required]
     });
   }
 
   ngOnInit(): void {
-    // If user is already logged in, redirect to appropriate dashboard
-    if (this.authService.isLoggedIn()) {
-      this.redirectBasedOnRole(this.authService.currentUserValue?.role);
+    // Check if user is already logged in
+    const currentUser = this.authService.currentUserValue;
+    
+    // Only redirect if user is logged in AND has a valid role
+    if (currentUser && this.authService.isLoggedIn() && currentUser.role) {
+      console.log('User already logged in with role:', currentUser.role);
+      // Redirect to appropriate dashboard based on role
+      this.redirectToDashboard(currentUser.role);
+    } else {
+      console.log('User not logged in or missing role, staying on login page');
     }
   }
 
+  // Getter for easy access to form fields
+  get f() { 
+    return this.loginForm.controls; 
+  }
+
   onSubmit() {
+    this.submitted = true;
+    this.errorMessage = '';
+    
+    // Stop here if form is invalid
     if (this.loginForm.invalid) {
       return;
     }
 
     const { email, password, role } = this.loginForm.value;
     this.loading = true;
-    this.errorMessage = '';
-
-    console.log(`Attempting to login with email: ${email} and role: ${role}`);
 
     this.authService.login(email, password)
       .pipe(
         catchError(error => {
-          console.error('Login error details:', error);
-          if (error.error && error.error.message) {
-            this.errorMessage = error.error.message;
-          } else if (error.status === 404) {
-            this.errorMessage = 'Login failed: API endpoint not found. Please contact support.';
-          } else {
-            this.errorMessage = 'Login failed. Please check your credentials and try again.';
-          }
+          console.error('Login error:', error);
+          this.errorMessage = error.error?.message || 'Login failed. Please check your credentials and try again.';
           return of(null);
         }),
         finalize(() => {
@@ -80,17 +86,31 @@ export class LoginComponent implements OnInit {
           // Check if the returned role matches the selected role
           if (response.role && response.role !== role) {
             this.errorMessage = `You attempted to login as a ${role}, but your account is registered as a ${response.role}.`;
-            this.authService.logout(); // Log them out since roles don't match
             return;
           }
           
+          // Store the user data
+          this.authService.setUserData(response); // Store user data
+          
           // Redirect based on role
-          this.redirectBasedOnRole(role);
+          this.redirectToDashboard(role || response.role);
         }
       });
   }
 
-  private redirectBasedOnRole(role?: string): void {
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
+
+  redirectToDashboard(role: string): void {
+    console.log('Redirecting to dashboard:', role);
+    
+    // If no role or invalid role, stay on login page
+    if (!role) {
+      console.log('No role provided, staying on login page');
+      return;
+    }
+    
     switch (role) {
       case 'admin':
         this.router.navigate(['/admin-dashboard']);
@@ -102,7 +122,16 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/jobseeker-dashboard']);
         break;
       default:
-        this.router.navigate(['/landing']);
+        console.log('Invalid role, staying on login page');
+        // Stay on login page for invalid roles
     }
+  }
+  
+  goToSignup() {
+    this.router.navigate(['/signup']);
+  }
+  
+  goToForgotPassword() {
+    this.router.navigate(['/forgot-password']);
   }
 }

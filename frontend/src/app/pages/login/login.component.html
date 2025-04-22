@@ -1,81 +1,96 @@
 <div class="login-container">
-  <img src="skillmatchAi.png" alt="SkillMatch AI Logo" class="logo" />
-  <h1>Login to SkillMatch AI</h1>
-  
-  <!-- Error message display -->
-  <div *ngIf="errorMessage" class="error-message">
-    {{ errorMessage }}
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Welcome Back</h1>
+      <p>Sign in to your account</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          formControlName="email" 
+          placeholder="Enter your email"
+          [ngClass]="{ 'is-invalid': submitted && f['email'].errors }"
+        >
+        <div *ngIf="submitted && f['email'].errors" class="error-message">
+          <div *ngIf="f['email'].errors['required']">Email is required</div>
+          <div *ngIf="f['email'].errors['email']">Please enter a valid email address</div>
+        </div>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-input-container">
+          <input 
+            [type]="showPassword ? 'text' : 'password'"
+            id="password" 
+            formControlName="password" 
+            placeholder="Enter your password"
+            [ngClass]="{ 'is-invalid': submitted && f['password'].errors }"
+          >
+          <button 
+            type="button" 
+            class="toggle-password" 
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+          >
+            <span class="material-icon">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+        <div *ngIf="submitted && f['password'].errors" class="error-message">
+          <div *ngIf="f['password'].errors['required']">Password is required</div>
+          <div *ngIf="f['password'].errors['minlength']">Password must be at least 6 characters</div>
+        </div>
+      </div>
+
+      <!-- Role Selection -->
+      <div class="form-group">
+        <label for="role">Login as</label>
+        <div class="role-selector">
+          <ng-container *ngFor="let role of roles">
+            <div class="role-option">
+              <input 
+                type="radio" 
+                [id]="role" 
+                formControlName="role" 
+                [value]="role"
+                [checked]="f['role'].value === role"
+              >
+              <label [for]="role" class="role-label">{{ role | titlecase }}</label>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Login Button -->
+      <button 
+        type="submit" 
+        class="login-button" 
+        [disabled]="loading"
+      >
+        <span *ngIf="!loading">Sign In</span>
+        <span *ngIf="loading" class="spinner"></span>
+      </button>
+
+      <!-- Forgot Password -->
+      <div class="forgot-password">
+        <a (click)="goToForgotPassword()">Forgot Password?</a>
+      </div>
+
+      <!-- Sign Up Link -->
+      <div class="signup-link">
+        Don't have an account? <a (click)="goToSignup()">Sign Up</a>
+      </div>
+    </form>
   </div>
-
-  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <!-- Role Selection -->
-    <div class="mb-4">
-      <label class="block mb-2 font-semibold">Login As</label>
-      <div class="flex justify-between">
-        <label>
-          <input type="radio" formControlName="role" value="jobseeker" />
-          Job Seeker
-        </label>
-        <label>
-          <input type="radio" formControlName="role" value="employer" />
-          Employer
-        </label>
-        <label>
-          <input type="radio" formControlName="role" value="admin" />
-          Admin
-        </label>
-      </div>
-      <div *ngIf="loginForm.get('role')?.touched && loginForm.get('role')?.invalid" class="text-red-600 text-sm">
-        Please select a role
-      </div>
-    </div>
-
-    <!-- Email Field -->
-    <div class="mb-4">
-      <label class="block mb-1 font-medium">Email</label>
-      <input 
-        type="email" 
-        formControlName="email" 
-        class="w-full border px-3 py-2 rounded" 
-        [ngClass]="{'input-error': loginForm.get('email')?.touched && loginForm.get('email')?.invalid}"
-      />
-      <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="text-red-600 text-sm">
-        Please enter a valid email
-      </div>
-    </div>
-
-    <!-- Password Field -->
-    <div class="mb-4">
-      <label class="block mb-1 font-medium">Password</label>
-      <input 
-        type="password" 
-        formControlName="password" 
-        class="w-full border px-3 py-2 rounded"
-        [ngClass]="{'input-error': loginForm.get('password')?.touched && loginForm.get('password')?.invalid}"
-      />
-      <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="text-red-600 text-sm">
-        Password is required (minimum 6 characters)
-      </div>
-    </div>
-
-    <!-- Submit Button -->
-    <button 
-      type="submit" 
-      [disabled]="loginForm.invalid || loading"
-      class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-      <span *ngIf="!loading">Login</span>
-      <span *ngIf="loading">Logging in...</span>
-    </button>
-  </form>
-
-  <!-- Signup Link -->
-  <p class="mt-4 text-center text-sm">
-    Don't have an account?
-    <a routerLink="/signup" class="text-blue-600 hover:underline">Sign Up</a>
-  </p>
-
-  <!-- Forgot Password Link -->
-  <p class="mt-2 text-center text-sm">
-    <a routerLink="/forgot-password" class="text-blue-600 hover:underline">Forgot Password?</a>
-  </p>
 </div>

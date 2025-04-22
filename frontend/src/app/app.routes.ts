@@ -2,7 +2,6 @@ import { Routes } from '@angular/router';
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LoginComponent } from './pages/login/login.component';
 import { SignupComponent } from './pages/signup/signup.component';
 import { JobseekerDashboardComponent } from './components/job-seeker-dashboard/job-seeker-dashboard.component';
 import { EmployerDashboardComponent } from './components/employer-dashboard/employer-dashboard.component';
@@ -22,6 +21,8 @@ import { AdminSettingsComponent } from './pages/admin-settings/admin-settings.co
 import { EmployerSettingsComponent } from './pages/employer-settings/employer-settings.component';
 import { JobseekerSettingsComponent } from './pages/jobseeker-settings/jobseeker-settings.component';
 import { PortfolioComponent } from './pages/portfolio/portfolio.component';
+import { LoginComponent } from './pages/login/login.component';
+import { AuthScreenComponent } from './pages/auth-screen/auth-screen.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'landing', pathMatch: 'full' },
@@ -35,8 +36,8 @@ export const routes: Routes = [
   { path: 'candidates', component: CandidatesComponent, data: { title: 'Candidates Overview' } },
   { path: 'landing', component: LandingComponent },
   { path: 'job-application-form', component: JobApplicationForm, data: { title: 'Job Application Form' } },
-  { path: 'login', component: LoginComponent },
-  { path: 'signup', component: SignupComponent },
+  { path: 'signup', component: AuthScreenComponent },
+  {path: 'login', component: AuthScreenComponent},
   // Add these new routes:
   { path: 'complete-profile', component: CompleteProfileComponent },
   { path: 'company', component: CompanyComponent },
@@ -55,7 +56,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'users', pathMatch: 'full' }
     ] 
   },
-  { path: '**', redirectTo: 'landing' },
+  // { path: '**', redirectTo: 'landing' },
 ];
 
 @NgModule({

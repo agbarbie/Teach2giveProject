@@ -27,7 +27,6 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
-    // Initialize user from localStorage if available
     const user = localStorage.getItem('currentUser');
     if (user) {
       this.currentUserSubject.next(JSON.parse(user));
@@ -53,14 +52,12 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<AuthResponse> {
-    // Added slash between apiUrl and auth/login
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, { email, password }).pipe(
       tap(response => this.handleAuthentication(response))
     );
   }
 
   logout(): void {
-    // Clear all auth data
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
     this.currentUserSubject.next(null);
@@ -72,21 +69,19 @@ export class AuthService {
       'Authorization': `Bearer ${this.getToken()}`
     });
 
-    // Added slash between apiUrl and auth/me
     return this.http.get<AuthResponse>(`${this.apiUrl}/auth/me`, { headers }).pipe(
       map(response => {
-        const user = {
+        const user: User = {
           id: response.id,
           email: response.email,
           role: response.role
         };
-        this.currentUserSubject.next(user);
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        this.setUserData(user); // use the new method here
         return user;
       }),
       catchError(error => {
         this.logout();
-        throw error; // Handle error appropriately
+        throw error;
       })
     );
   }
@@ -96,20 +91,25 @@ export class AuthService {
       'Authorization': `Bearer ${this.getToken()}`
     });
 
-    // Added slash between apiUrl and auth/password
     return this.http.put(`${this.apiUrl}/auth/password`, { currentPassword, newPassword }, { headers });
   }
 
   private handleAuthentication(response: AuthResponse): void {
-    const user = {
+    const user: User = {
       id: response.id,
       email: response.email,
       role: response.role
     };
 
-    // Store user details and token in local storage
+    this.setUserData(user, response.token);
+  }
+
+  // ✅ Added method for manual user data setting
+  setUserData(user: User, token?: string): void {
     localStorage.setItem('currentUser', JSON.stringify(user));
-    localStorage.setItem('token', response.token);
+    if (token) {
+      localStorage.setItem('token', token);
+    }
     this.currentUserSubject.next(user);
   }
 }
