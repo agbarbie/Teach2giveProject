@@ -34,7 +34,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Health check route
-app.get('/health', (req: Request, res: Response) => {
+app.get('/', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
