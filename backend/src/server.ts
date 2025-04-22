@@ -59,6 +59,13 @@ app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
 
+//show the server logs in the console and errors if they arise like cause of 500 errors
+
+app.use((req: Request, res: Response, next: Function) => {
+  console.log(`Request Method: ${req.method}, Request URL: ${req.url}`);
+  next();
+});
+
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err: Error) => {
   console.error(`Unhandled Rejection: ${err.message}`);
