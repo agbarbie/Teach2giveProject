@@ -1,8 +1,8 @@
 import express from 'express';
-import { 
-  getAllJobs, 
-  getJobById, 
-  createJob, 
+import {
+  getAllJobs,
+  getJobById,
+  createJob,
   updateJob,
   deleteJob,
   addJobSkill,
@@ -16,13 +16,13 @@ const router = express.Router();
 router.get('/', getAllJobs);
 router.get('/:id', getJobById);
 
-// Employer routes
-router.post('/', createJob);
-router.put('/:id', updateJob); // Owner check in controller
-router.delete('/:id', deleteJob); // Owner check in controller
+// Employer routes - all require authentication and employer role
+router.post('/', protect, restrictTo('employer'), createJob);
+router.put('/:id', protect, restrictTo('employer'), updateJob); // Owner check in controller
+router.delete('/:id', protect, restrictTo('employer'), deleteJob); // Owner check in controller
 
-// Job skills management
-router.post('/:id/skills', addJobSkill); // Owner check in controller
-router.delete('/:id/skills/:skillId', removeJobSkill); // Owner check in controller
+// Job skills management - all require authentication and employer role
+router.post('/:id/skills', protect, restrictTo('employer'), addJobSkill); // Owner check in controller
+router.delete('/:id/skills/:skillId', protect, restrictTo('employer'), removeJobSkill); // Owner check in controller
 
 export default router;

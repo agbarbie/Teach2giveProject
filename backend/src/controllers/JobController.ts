@@ -11,10 +11,11 @@ import { RequestWithUser } from '../utils/Types/index';
 export const getAllJobs = asyncHandler(async (req: Request, res: Response) => {
   const { status, location, title, company } = req.query;
   
+  // Fix: Changed JOIN condition to use correct column name
   let query = `
     SELECT j.*, c.name as company_name 
     FROM jobs j
-    JOIN companies c ON j.company_id = c.id
+    JOIN companies c ON j.company_id = c.company_id
     WHERE 1=1
   `;
   
@@ -62,11 +63,11 @@ export const getAllJobs = asyncHandler(async (req: Request, res: Response) => {
 export const getJobById = asyncHandler(async (req: Request, res: Response) => {
   const jobId = parseInt(req.params.id);
 
-  // Get job with company name
+  // Fix: Changed JOIN condition to use correct column name
   const jobResult = await pool.query(
     `SELECT j.*, c.name as company_name 
      FROM jobs j
-     JOIN companies c ON j.company_id = c.id
+     JOIN companies c ON j.company_id = c.company_id
      WHERE j.id = $1`,
     [jobId]
   );
@@ -109,9 +110,9 @@ export const createJob = asyncHandler(async (req: RequestWithUser, res: Response
     throw new AppError('Please provide all required fields', 400);
   }
 
-  // Check if company exists and user is the owner
+  // Fix: Changed company query to use correct column name
   const companyResult = await pool.query(
-    'SELECT * FROM companies WHERE id = $1',
+    'SELECT * FROM companies WHERE company_id = $1',
     [company_id]
   );
   
@@ -158,11 +159,11 @@ export const createJob = asyncHandler(async (req: RequestWithUser, res: Response
 
     await client.query('COMMIT');
 
-    // Get the full job with skills
+    // Fix: Changed JOIN condition to use correct column name
     const fullJobResult = await pool.query(
       `SELECT j.*, c.name as company_name 
        FROM jobs j
-       JOIN companies c ON j.company_id = c.id
+       JOIN companies c ON j.company_id = c.company_id
        WHERE j.id = $1`,
       [newJob.id]
     );
@@ -201,11 +202,11 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
     salary_range, job_type, experience_level, status, skills 
   } = req.body;
 
-  // Check if job exists and user is the owner of the company
+  // Fix: Changed JOIN condition to use correct column name
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
-     JOIN companies c ON j.company_id = c.id
+     JOIN companies c ON j.company_id = c.company_id
      WHERE j.id = $1`,
     [jobId]
   );
@@ -313,11 +314,11 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
 
     await client.query('COMMIT');
 
-    // Get the updated job with skills
+    // Fix: Changed JOIN condition to use correct column name
     const updatedJobResult = await pool.query(
       `SELECT j.*, c.name as company_name 
        FROM jobs j
-       JOIN companies c ON j.company_id = c.id
+       JOIN companies c ON j.company_id = c.company_id
        WHERE j.id = $1`,
       [jobId]
     );
@@ -352,11 +353,11 @@ export const deleteJob = asyncHandler(async (req: RequestWithUser, res: Response
   const jobId = parseInt(req.params.id);
   const userId = req.user?.id;
 
-  // Check if job exists and user is the owner of the company
+  // Fix: Changed JOIN condition to use correct column name
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
-     JOIN companies c ON j.company_id = c.id
+     JOIN companies c ON j.company_id = c.company_id
      WHERE j.id = $1`,
     [jobId]
   );
@@ -424,11 +425,11 @@ export const addJobSkill = asyncHandler(async (req: RequestWithUser, res: Respon
     throw new AppError('Skill ID is required', 400);
   }
 
-  // Check if job exists and user is the owner of the company
+  // Fix: Changed JOIN condition to use correct column name
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
-     JOIN companies c ON j.company_id = c.id
+     JOIN companies c ON j.company_id = c.company_id
      WHERE j.id = $1`,
     [jobId]
   );
@@ -480,11 +481,11 @@ export const removeJobSkill = asyncHandler(async (req: RequestWithUser, res: Res
   const skillId = parseInt(req.params.skillId);
   const userId = req.user?.id;
 
-  // Check if job exists and user is the owner of the company
+  // Fix: Changed JOIN condition to use correct column name
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
-     JOIN companies c ON j.company_id = c.id
+     JOIN companies c ON j.company_id = c.company_id
      WHERE j.id = $1`,
     [jobId]
   );
