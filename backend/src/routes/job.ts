@@ -17,12 +17,12 @@ router.get('/', getAllJobs);
 router.get('/:id', getJobById);
 
 // Employer routes
-router.post('/', restrictTo('employer'), createJob);
-router.put('/:id', protect, updateJob); // Owner check in controller
-router.delete('/:id', protect, deleteJob); // Owner check in controller
+router.post('/', createJob);
+router.put('/:id', updateJob); // Owner check in controller
+router.delete('/:id', deleteJob); // Owner check in controller
 
 // Job skills management
-router.post('/:id/skills', protect, addJobSkill); // Owner check in controller
-router.delete('/:id/skills/:skillId', protect, removeJobSkill); // Owner check in controller
+router.post('/:id/skills', addJobSkill); // Owner check in controller
+router.delete('/:id/skills/:skillId', removeJobSkill); // Owner check in controller
 
 export default router;
