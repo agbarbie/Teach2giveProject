@@ -198,7 +198,6 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
     salary_range, job_type, experience_level, status, skills 
   } = req.body;
 
-  // Fix: Changed c.id to c.company_id in JOIN and changed to c.owner_id for company owner reference
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
@@ -348,7 +347,6 @@ export const deleteJob = asyncHandler(async (req: RequestWithUser, res: Response
   const jobId = parseInt(req.params.id);
   const userId = req.user?.id;
 
-  // Fix: Changed c.id to c.company_id in JOIN and using c.owner_id for ownership check
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
@@ -420,7 +418,6 @@ export const addJobSkill = asyncHandler(async (req: RequestWithUser, res: Respon
     throw new AppError('Skill ID is required', 400);
   }
 
-  // Fix: Changed c.id to c.company_id in JOIN and using c.owner_id for ownership check
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
@@ -476,7 +473,6 @@ export const removeJobSkill = asyncHandler(async (req: RequestWithUser, res: Res
   const skillId = parseInt(req.params.skillId);
   const userId = req.user?.id;
 
-  // Fix: Changed c.id to c.company_id in JOIN and using c.owner_id for ownership check
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
