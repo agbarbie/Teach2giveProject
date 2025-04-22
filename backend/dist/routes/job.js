@@ -16,5 +16,5 @@ router.put('/:id', protect_1.protect, (0, protect_1.restrictTo)('employer'), Job
 router.delete('/:id', protect_1.protect, (0, protect_1.restrictTo)('employer'), JobController_1.deleteJob); // Owner check in controller
 // Job skills management - all require authentication and employer role
 router.post('/:id/skills', protect_1.protect, (0, protect_1.restrictTo)('employer'), JobController_1.addJobSkill); // Owner check in controller
-router.delete('/:id/skills/:skillId', protect_1.protect, (0, protect_1.restrictTo)('employer'), JobController_1.removeJobSkill); // Owner check in controller
+router.delete('/:id/skills/:skillId', protect_1.protect, (0, protect_1.restrictTo)('employer'), JobController_1.removeJobSkill);
 exports.default = router;

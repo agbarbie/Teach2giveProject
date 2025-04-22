@@ -33,7 +33,7 @@ if (process.env.NODE_ENV === 'development') {
     app.use((0, morgan_1.default)('dev'));
 }
 // Health check route
-app.get('/health', (req, res) => {
+app.get('/', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 // API routes

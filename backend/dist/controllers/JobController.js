@@ -13,7 +13,6 @@ const helpers_1 = require("../utils/helpers");
 // @access  Public
 exports.getAllJobs = (0, asyncHandlers_1.default)(async (req, res) => {
     const { status, location, title, company } = req.query;
-    // Fix: Changed JOIN condition to use correct column name
     let query = `
     SELECT j.*, c.name as company_name 
     FROM jobs j
@@ -56,7 +55,6 @@ exports.getAllJobs = (0, asyncHandlers_1.default)(async (req, res) => {
 // @access  Public
 exports.getJobById = (0, asyncHandlers_1.default)(async (req, res) => {
     const jobId = parseInt(req.params.id);
-    // Fix: Changed JOIN condition to use correct column name
     const jobResult = await db_config_1.default.query(`SELECT j.*, c.name as company_name 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
@@ -86,7 +84,6 @@ exports.createJob = (0, asyncHandlers_1.default)(async (req, res) => {
     if (!company_id || !title || !description || !location || !job_type) {
         throw new errorMiddlewares_1.AppError('Please provide all required fields', 400);
     }
-    // Fix: Changed company query to use correct column name
     const companyResult = await db_config_1.default.query('SELECT * FROM companies WHERE company_id = $1', [company_id]);
     if (companyResult.rows.length === 0) {
         throw new errorMiddlewares_1.AppError('Company not found', 404);
@@ -116,7 +113,6 @@ exports.createJob = (0, asyncHandlers_1.default)(async (req, res) => {
             }
         }
         await client.query('COMMIT');
-        // Fix: Changed JOIN condition to use correct column name
         const fullJobResult = await db_config_1.default.query(`SELECT j.*, c.name as company_name 
        FROM jobs j
        JOIN companies c ON j.company_id = c.company_id
@@ -147,7 +143,6 @@ exports.updateJob = (0, asyncHandlers_1.default)(async (req, res) => {
     const jobId = parseInt(req.params.id);
     const userId = req.user?.id;
     const { title, description, requirements, location, salary_range, job_type, experience_level, status, skills } = req.body;
-    // Fix: Changed JOIN condition to use correct column name
     const jobResult = await db_config_1.default.query(`SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
@@ -232,7 +227,6 @@ exports.updateJob = (0, asyncHandlers_1.default)(async (req, res) => {
             }
         }
         await client.query('COMMIT');
-        // Fix: Changed JOIN condition to use correct column name
         const updatedJobResult = await db_config_1.default.query(`SELECT j.*, c.name as company_name 
        FROM jobs j
        JOIN companies c ON j.company_id = c.company_id
@@ -262,7 +256,6 @@ exports.updateJob = (0, asyncHandlers_1.default)(async (req, res) => {
 exports.deleteJob = (0, asyncHandlers_1.default)(async (req, res) => {
     const jobId = parseInt(req.params.id);
     const userId = req.user?.id;
-    // Fix: Changed JOIN condition to use correct column name
     const jobResult = await db_config_1.default.query(`SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
@@ -314,7 +307,6 @@ exports.addJobSkill = (0, asyncHandlers_1.default)(async (req, res) => {
     if (!skill_id) {
         throw new errorMiddlewares_1.AppError('Skill ID is required', 400);
     }
-    // Fix: Changed JOIN condition to use correct column name
     const jobResult = await db_config_1.default.query(`SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
@@ -350,7 +342,6 @@ exports.removeJobSkill = (0, asyncHandlers_1.default)(async (req, res) => {
     const jobId = parseInt(req.params.id);
     const skillId = parseInt(req.params.skillId);
     const userId = req.user?.id;
-    // Fix: Changed JOIN condition to use correct column name
     const jobResult = await db_config_1.default.query(`SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
