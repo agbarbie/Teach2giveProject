@@ -31,7 +31,8 @@ backend/
 │   └── utils/
 │       └── helpers/
 
-
+sudo docker stop backendusers-fixed
+sudo docker rm backendusers-fixed
 sudo docker run -d --name backendusers-fixed \
   -p 80:80 \
   -e DB_HOST=skillmatchesai1.clys68qy6l9q.eu-north-1.rds.amazonaws.com \
