@@ -7,7 +7,7 @@ import {
   deleteSkill,
   getSkillCategories
 } from '../controllers/SkillController';
-import { protect, restrictTo } from '../middlewares/protect';
+import { protect} from '../middlewares/protect';
 
 const router = express.Router();
 
@@ -17,8 +17,8 @@ router.get('/categories', getSkillCategories);
 router.get('/:id', getSkillById);
 
 // Admin only routes
-router.post('/', protect, restrictTo('admin'), createSkill);
-router.put('/:id', protect, restrictTo('admin'), updateSkill);
-router.delete('/:id', protect, restrictTo('admin'), deleteSkill);
+router.post('/', protect, createSkill);
+router.put('/:id', protect,  updateSkill);
+router.delete('/:id', protect,  deleteSkill);
 
 export default router;

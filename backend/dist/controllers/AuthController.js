@@ -37,7 +37,7 @@ exports.register = (0, asyncHandlers_1.default)(async (req, res) => {
         await db_config_1.default.query('INSERT INTO jobseeker_profiles (user_id, full_name, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())', [newUser.id, '']);
     }
     // Generate token
-    const token = (0, helpers_1.generateToken)(newUser);
+    const token = (0, helpers_1.generateToken)(newUser, newUser.role_id);
     res.status(201).json((0, helpers_1.formatSuccess)({
         id: newUser.id,
         email: newUser.email,
@@ -65,12 +65,15 @@ exports.login = (0, asyncHandlers_1.default)(async (req, res) => {
         throw new errorMiddlewares_1.AppError('Invalid credentials', 401);
     }
     // Generate token
-    const token = (0, helpers_1.generateToken)(user);
+    const token = (0, helpers_1.generateToken)(user.id, user.role);
+    //  get accestoken and refreshtoken from the user
+    const { accessToken, refreshToken } = token;
     res.json((0, helpers_1.formatSuccess)({
         id: user.id,
         email: user.email,
         role: user.role,
-        token
+        accessToken: accessToken,
+        refreshToken: refreshToken,
     }, 'Login successful'));
 });
 // @desc    Get current user profile

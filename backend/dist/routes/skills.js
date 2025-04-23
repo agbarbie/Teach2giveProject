@@ -12,7 +12,7 @@ router.get('/', SkillController_1.getAllSkills);
 router.get('/categories', SkillController_1.getSkillCategories);
 router.get('/:id', SkillController_1.getSkillById);
 // Admin only routes
-router.post('/', protect_1.protect, (0, protect_1.restrictTo)('admin'), SkillController_1.createSkill);
-router.put('/:id', protect_1.protect, (0, protect_1.restrictTo)('admin'), SkillController_1.updateSkill);
-router.delete('/:id', protect_1.protect, (0, protect_1.restrictTo)('admin'), SkillController_1.deleteSkill);
+router.post('/', protect_1.protect, SkillController_1.createSkill);
+router.put('/:id', protect_1.protect, SkillController_1.updateSkill);
+router.delete('/:id', protect_1.protect, SkillController_1.deleteSkill);
 exports.default = router;

@@ -3,60 +3,47 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restrictTo = exports.protect = void 0;
+exports.protect = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const db_config_1 = __importDefault(require("../db/db.config"));
-const errorMiddlewares_1 = require("./errorMiddlewares");
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
-// Middleware to protect routes by verifying JWT token
-const protect = async (req, res, next) => {
+const asyncHandlers_1 = __importDefault(require("./asyncHandlers"));
+//Auth middleware to protect routes 
+exports.protect = (0, asyncHandlers_1.default)(async (req, res, next) => {
+    let token;
+    // Try to get the token from the Authorization header
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+        token = req.headers.authorization.split(" ")[1];
+    }
+    // If no token is found
+    if (!token) {
+        return res.status(401).json({ message: "Not authorized, no token" });
+    }
     try {
-        let token;
-        // Check for token in Authorization header with Bearer prefix
-        if (req.headers.authorization &&
-            req.headers.authorization.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
+        // Ensure JWT_SECRET is defined
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is not defined in environment variables");
         }
-        // If no token found, return unauthorized error
-        if (!token) {
-            return next(new errorMiddlewares_1.AppError('Not authorized, no token provided', 401));
+        // Verify the token
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        // Fetch the user from the database
+        const userQuery = await db_config_1.default.query("SELECT id, email, role FROM users WHERE id = $1", [decoded.userId]);
+        if (userQuery.rows.length === 0) {
+            return res.status(401).json({ message: "User not found" });
         }
-        try {
-            // Verify token
-            const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-            // Check if token is still valid (not expired)
-            if (decoded.exp * 1000 < Date.now()) {
-                return next(new errorMiddlewares_1.AppError('Token expired, please login again', 401));
-            }
-            // Check if user still exists in database
-            const { rows } = await db_config_1.default.query('SELECT id, email, role FROM users WHERE id = $1', [decoded.id]);
-            if (rows.length === 0) {
-                return next(new errorMiddlewares_1.AppError('User belonging to this token no longer exists', 401));
-            }
-            // Add user to request object
-            req.user = rows[0];
-            next();
-        }
-        catch (error) {
-            return next(new errorMiddlewares_1.AppError('Invalid token, please login again', 401));
-        }
+        // Attach the user to the request
+        req.user = userQuery.rows[0];
+        // Proceed to the next middleware
+        next();
     }
     catch (error) {
-        next(error);
+        console.error("JWT Error:", error);
+        // Handle token expiration or invalid token
+        if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
+            return res.status(401).json({ message: "Token expired, please log in again" });
+        }
+        else if (error instanceof jsonwebtoken_1.default.JsonWebTokenError) {
+            return res.status(401).json({ message: "Invalid token, not authorized" });
+        }
+        res.status(401).json({ message: "Not authorized, token failed" });
     }
-};
-exports.protect = protect;
-// Middleware to restrict access based on user roles
-const restrictTo = (...roles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return next(new errorMiddlewares_1.AppError('User not found, please login again', 401));
-        }
-        if (!roles.includes(req.user.role)) {
-            return next(new errorMiddlewares_1.AppError('You do not have permission to perform this action', 403));
-        }
-        next();
-    };
-};
-exports.restrictTo = restrictTo;
+});

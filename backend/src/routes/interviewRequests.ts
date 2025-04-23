@@ -8,17 +8,17 @@ import {
   rescheduleInterview,
   cancelInterview
 } from '../controllers/InterviewRequestController';
-import { protect, restrictTo } from '../middlewares/protect';
+import { protect}from '../middlewares/protect';
 
 const router = express.Router();
 
 // All routes are protected
 router.get('/application/:applicationId', protect, getInterviewsByApplication); // Permission check in controller
-router.get('/my', protect, restrictTo('jobseeker'), getMyInterviews);
-router.get('/company', protect, restrictTo('employer'), getCompanyInterviews);
-router.post('/', protect, restrictTo('employer', 'admin'), createInterviewRequest);
-router.put('/:id/status', protect, restrictTo('jobseeker'), updateInterviewStatus);
-router.put('/:id/reschedule', protect, restrictTo('employer', 'admin'), rescheduleInterview);
+router.get('/my', protect, getMyInterviews);
+router.get('/company', protect,  getCompanyInterviews);
+router.post('/', protect, createInterviewRequest);
+router.put('/:id/status', protect, updateInterviewStatus);
+router.put('/:id/reschedule', protect,  rescheduleInterview);
 router.delete('/:id', protect, cancelInterview); // Permission check in controller
 
 export default router;

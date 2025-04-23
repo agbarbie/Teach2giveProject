@@ -8,7 +8,7 @@ import {
   getResourcesBySkill,
   getRecommendedResources
 } from '../controllers/LearningResourceController';
-import { protect, restrictTo } from '../middlewares/protect';
+import { protect} from '../middlewares/protect';
 
 const router = express.Router();
 
@@ -21,8 +21,8 @@ router.get('/skill/:skillId', getResourcesBySkill);
 router.get('/recommended', protect, getRecommendedResources);
 
 // Admin only routes
-router.post('/', protect, restrictTo('admin'), createResource);
-router.put('/:id', protect, restrictTo('admin'), updateResource);
-router.delete('/:id', protect, restrictTo('admin'), deleteResource);
+router.post('/', protect,createResource);
+router.put('/:id', protect,updateResource);
+router.delete('/:id', protect, deleteResource);
 
 export default router;

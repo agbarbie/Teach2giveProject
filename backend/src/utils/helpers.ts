@@ -23,66 +23,31 @@ export const comparePassword = async (
 /**
  * Generate JWT token
  */
-export const generateToken = (user: Partial<User>): string => {
-  // Default to 24 hours if JWT_EXPIRES_IN is not properly set
-  let expiresIn: string | number = '24h';
-  
-  if (process.env.JWT_EXPIRES_IN) {
-    // Try to parse as a number (seconds)
-    const expiresInValue = parseInt(process.env.JWT_EXPIRES_IN, 10);
-    
-    if (!isNaN(expiresInValue)) {
-      // If it's a valid number, use it as seconds
-      expiresIn = expiresInValue;
-    } else if (typeof process.env.JWT_EXPIRES_IN === 'string') {
-      // If it's a string like '1h', '7d', use it directly
-      expiresIn = process.env.JWT_EXPIRES_IN;
-    }
-  }
-  
-  // Make sure JWT_SECRET exists
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is not defined in environment variables');
-  }
-  
-  // Create the payload
-  const payload = {
-    id: user.id,
-    email: user.email,
-    role: user.role
-  };
-  
-  // Create the options object with correct typing
-  const options: jwt.SignOptions = {
-    expiresIn: expiresIn as number
-  };
-  
-  // Sign the token with proper typing
-  return jwt.sign(payload, secret, options);
-};
-
 /**
- * Generate refresh token with longer expiration
+ * Generate JWT token
  */
-export const generateRefreshToken = (user: Partial<User>): string => {
-  const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT secret is not defined in environment variables');
-  }
-  
-  const payload = {
-    id: user.id,
-    tokenType: 'refresh'
-  };
-  
-  const options: jwt.SignOptions = {
-    expiresIn: '7d'
-  };
-  
-  return jwt.sign(payload, secret, options);
-};
+export const generateToken = (userId: string, roleId: number) => {
+  const jwtSecret = process.env.JWT_SECRET;
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
 
+  if (!jwtSecret || !refreshSecret) {
+    throw new Error("JWT_SECRET or REFRESH_TOKEN_SECRET is not defined in environment variables");
+  }
+
+  try {
+    // Generate a short-lived access token (15 minutes)
+    const accessToken = jwt.sign({ userId, roleId }, jwtSecret, { expiresIn: "15m" });
+
+    // Generate a long-lived refresh token (30 days)
+    const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: "30d" });
+
+    // Return the tokens directly
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.error("Error generating JWT:", error);
+    throw new Error("Error generating authentication tokens");
+  }
+};
 /**
  * Verify JWT token with better error handling
  */

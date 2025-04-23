@@ -3,81 +3,59 @@ import jwt from 'jsonwebtoken';
 import pool from '../db/db.config';
 import { AppError } from './errorMiddlewares';
 import dotenv from 'dotenv';
+import asyncHandler from './asyncHandlers';
+import { RequestWithUser } from '../utils/Types';
 
-dotenv.config();
 
-// Extended Request interface with user property
-export interface RequestWithUser extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-  };
-}
+//Auth middleware to protect routes 
+export const protect = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
+  let token;
 
-// Middleware to protect routes by verifying JWT token
-export const protect = async (req: RequestWithUser, res: Response, next: NextFunction) => {
-  try {
-    let token: string | undefined;
-
-    // Check for token in Authorization header with Bearer prefix
-    if (
-      req.headers.authorization && 
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-
-    // If no token found, return unauthorized error
-    if (!token) {
-      return next(new AppError('Not authorized, no token provided', 401));
-    }
-
-    try {
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secure_secret_key') as {
-        id: number;
-        iat: number;
-        exp: number;
-      };
-
-      // Check if token is still valid (not expired)
-      if (decoded.exp * 1000 < Date.now()) {
-        return next(new AppError('Token expired, please login again', 401));
-      }
-
-      // Check if user still exists in database
-      const { rows } = await pool.query(
-        'SELECT id, email, role FROM users WHERE id = $1',
-        [decoded.id]
-      );
-
-      if (rows.length === 0) {
-        return next(new AppError('User belonging to this token no longer exists', 401));
-      }
-
-      // Add user to request object
-      req.user = rows[0];
-      next();
-    } catch (error) {
-      return next(new AppError('Invalid token, please login again', 401));
-    }
-  } catch (error) {
-    next(error);
+  // Try to get the token from the Authorization header
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
   }
-};
 
-// Middleware to restrict access based on user roles
-export const restrictTo = (...roles: string[]) => {
-  return (req: RequestWithUser, res: Response, next: NextFunction) => {
-    if (!req.user) {
-      return next(new AppError('User not found, please login again', 401));
+  // If no token is found
+  if (!token) {
+    return res.status(401).json({ message: "Not authorized, no token" });
+  }
+
+  try {
+    // Ensure JWT_SECRET is defined
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined in environment variables");
     }
 
-    if (!roles.includes(req.user.role)) {
-      return next(new AppError('You do not have permission to perform this action', 403));
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as { userId: string };
+
+    // Fetch the user from the database
+    const userQuery = await pool.query(
+      "SELECT id, email, role FROM users WHERE id = $1",
+      [decoded.userId]
+    );
+    
+
+    if (userQuery.rows.length === 0) {
+      return res.status(401).json({ message: "User not found" });
     }
 
+    // Attach the user to the request
+    req.user = userQuery.rows[0];
+
+    // Proceed to the next middleware
     next();
-  };
-};
+  } catch (error) {
+    console.error("JWT Error:", error);
+
+    // Handle token expiration or invalid token
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: "Token expired, please log in again" });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: "Invalid token, not authorized" });
+    }
+
+    res.status(401).json({ message: "Not authorized, token failed" });
+  }
+});

@@ -24,8 +24,9 @@ export interface Company {
   id: number;
   owner_id: number;
   name: string;
-  logo_url?: string;
   description?: string;
+  website_url?: string;
+  logo_url?: string;
   industry?: string;
   website?: string;
   location?: string;
@@ -33,6 +34,7 @@ export interface Company {
   created_at: Date;
   updated_at: Date;
 }
+
 
 export interface Job {
   id: number;

@@ -7,7 +7,7 @@ import {
   getUserSkills,
   getCurrentUser
 } from '../controllers/UserController';
-import { protect, restrictTo } from '../middlewares/protect';
+import { protect} from '../middlewares/protect';
 
 const router = express.Router();
 

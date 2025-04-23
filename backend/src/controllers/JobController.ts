@@ -21,7 +21,6 @@ export const getAllJobs = asyncHandler(async (req: Request, res: Response) => {
   const queryParams: any[] = [];
   let paramIndex = 1;
   
-  // Add filters if provided
   if (location) {
     query += ` AND LOWER(j.location) LIKE LOWER($${paramIndex})`;
     queryParams.push(`%${location}%`);
@@ -67,7 +66,6 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
 
   const job = jobResult.rows[0];
 
-  // Get required skills for the job
   const skillsResult = await pool.query(
     `SELECT js.skill_id, js.importance_level, s.name, s.category
      FROM job_skills js
@@ -100,22 +98,16 @@ export const createJob = asyncHandler(async (req: RequestWithUser, res: Response
     throw new AppError('Please provide all required fields', 400);
   }
 
+  // Verify company exists and user is the owner
   const companyResult = await pool.query(
-    'SELECT * FROM companies WHERE company_id = $1',
-    [company_id]
+    'SELECT * FROM companies WHERE company_id = $1 AND owner_id = $2',
+    [company_id, userId]
   );
   
   if (companyResult.rows.length === 0) {
-    throw new AppError('Company not found', 404);
+    throw new AppError('Company not found or you are not the owner', 404);
   }
 
-  const company = companyResult.rows[0];
-  
-  if (company.owner_id !== userId) {
-    throw new AppError('Not authorized to create a job for this company', 403);
-  }
-
-  // Use a transaction to create job and skills
   const client = await pool.connect();
   
   try {
@@ -190,26 +182,19 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
     salary_range, job_type, experience_level, skills 
   } = req.body;
 
+  // Verify job exists and user is the company owner
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1`,
-    [jobId]
+     WHERE j.id = $1 AND c.owner_id = $2`,
+    [jobId, userId]
   );
   
   if (jobResult.rows.length === 0) {
-    throw new AppError('Job not found', 404);
+    throw new AppError('Job not found or you are not the owner', 404);
   }
 
-  const job = jobResult.rows[0];
-  
-  // Check ownership or admin rights
-  if (job.owner_id !== userId && req.user?.role !== 'admin') {
-    throw new AppError('Not authorized to update this job', 403);
-  }
-
-  // Use a transaction for updating job and skills
   const client = await pool.connect();
   
   try {
@@ -262,10 +247,8 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
       paramCounter++;
     }
 
-    // Add updated_at timestamp
     updateFields.push(`updated_at = NOW()`);
 
-    // If we have fields to update, execute the job update
     if (updateFields.length > 0) {
       const updateQuery = `
         UPDATE jobs 
@@ -278,12 +261,9 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
       await client.query(updateQuery, queryParams);
     }
 
-    // Update skills if provided
     if (skills && Array.isArray(skills)) {
-      // Remove existing skills
       await client.query('DELETE FROM job_skills WHERE job_id = $1', [jobId]);
       
-      // Add new skills
       for (const skill of skills) {
         await client.query(
           `INSERT INTO job_skills (job_id, skill_id, importance_level, created_at)
@@ -333,52 +313,37 @@ export const deleteJob = asyncHandler(async (req: RequestWithUser, res: Response
   const jobId = parseInt(req.params.id);
   const userId = req.user?.id;
 
+  // Verify job exists and user is the company owner
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1`,
-    [jobId]
+     WHERE j.id = $1 AND c.owner_id = $2`,
+    [jobId, userId]
   );
   
   if (jobResult.rows.length === 0) {
-    throw new AppError('Job not found', 404);
+    throw new AppError('Job not found or you are not the owner', 404);
   }
 
-  const job = jobResult.rows[0];
-  
-  // Check ownership or admin rights
-  if (job.owner_id !== userId && req.user?.role !== 'admin') {
-    throw new AppError('Not authorized to delete this job', 403);
-  }
-
-  // Use a transaction to delete job and related data
   const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
 
-    // Delete job skills
     await client.query('DELETE FROM job_skills WHERE job_id = $1', [jobId]);
-    
-    // Delete job matches
     await client.query('DELETE FROM job_matches WHERE job_id = $1', [jobId]);
     
-    // Get applications for this job
     const applicationsResult = await client.query(
       'SELECT id FROM applications WHERE job_id = $1', 
       [jobId]
     );
     
-    // Delete interview requests for each application
     for (const app of applicationsResult.rows) {
       await client.query('DELETE FROM interview_requests WHERE application_id = $1', [app.id]);
     }
     
-    // Delete applications
     await client.query('DELETE FROM applications WHERE job_id = $1', [jobId]);
-    
-    // Finally delete the job
     await client.query('DELETE FROM jobs WHERE id = $1', [jobId]);
     
     await client.query('COMMIT');
@@ -404,33 +369,25 @@ export const addJobSkill = asyncHandler(async (req: RequestWithUser, res: Respon
     throw new AppError('Skill ID is required', 400);
   }
 
+  // Verify job exists and user is the company owner
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1`,
-    [jobId]
+     WHERE j.id = $1 AND c.owner_id = $2`,
+    [jobId, userId]
   );
   
   if (jobResult.rows.length === 0) {
-    throw new AppError('Job not found', 404);
+    throw new AppError('Job not found or you are not the owner', 404);
   }
 
-  const job = jobResult.rows[0];
-  
-  // Check ownership or admin rights
-  if (job.owner_id !== userId && req.user?.role !== 'admin') {
-    throw new AppError('Not authorized to update this job', 403);
-  }
-
-  // Check if skill exists
   const skillExists = await pool.query('SELECT * FROM skills WHERE id = $1', [skill_id]);
   
   if (skillExists.rows.length === 0) {
     throw new AppError('Skill not found', 404);
   }
 
-  // Check if job already has this skill
   const jobSkillExists = await pool.query(
     'SELECT * FROM job_skills WHERE job_id = $1 AND skill_id = $2',
     [jobId, skill_id]
@@ -440,7 +397,6 @@ export const addJobSkill = asyncHandler(async (req: RequestWithUser, res: Respon
     throw new AppError('This skill is already added to the job', 400);
   }
 
-  // Add skill to job
   const result = await pool.query(
     `INSERT INTO job_skills (job_id, skill_id, importance_level, created_at)
      VALUES ($1, $2, $3, NOW())
@@ -459,26 +415,19 @@ export const removeJobSkill = asyncHandler(async (req: RequestWithUser, res: Res
   const skillId = parseInt(req.params.skillId);
   const userId = req.user?.id;
 
+  // Verify job exists and user is the company owner
   const jobResult = await pool.query(
     `SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1`,
-    [jobId]
+     WHERE j.id = $1 AND c.owner_id = $2`,
+    [jobId, userId]
   );
   
   if (jobResult.rows.length === 0) {
-    throw new AppError('Job not found', 404);
+    throw new AppError('Job not found or you are not the owner', 404);
   }
 
-  const job = jobResult.rows[0];
-  
-  // Check ownership or admin rights
-  if (job.owner_id !== userId && req.user?.role !== 'admin') {
-    throw new AppError('Not authorized to update this job', 403);
-  }
-
-  // Check if this skill is associated with the job
   const jobSkillExists = await pool.query(
     'SELECT * FROM job_skills WHERE job_id = $1 AND skill_id = $2',
     [jobId, skillId]
@@ -488,7 +437,6 @@ export const removeJobSkill = asyncHandler(async (req: RequestWithUser, res: Res
     throw new AppError('This skill is not associated with the job', 404);
   }
 
-  // Remove skill from job
   await pool.query(
     'DELETE FROM job_skills WHERE job_id = $1 AND skill_id = $2',
     [jobId, skillId]

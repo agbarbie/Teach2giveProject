@@ -7,7 +7,7 @@ import {
   deleteCompany,
   getCompanyJobs
 } from '../controllers/CompanyController';
-import { protect, restrictTo } from '../middlewares/protect';
+import { protect } from '../middlewares/protect';
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.get('/:id', getCompanyById);
 router.get('/:id/jobs', getCompanyJobs);
 
 // Protected routes
-router.post('/', protect, restrictTo('employer'), createCompany);
+router.post('/', protect,createCompany);
 router.put('/:id', protect, updateCompany); // Owner check in controller
 router.delete('/:id', protect, deleteCompany); // Owner check in controller
 

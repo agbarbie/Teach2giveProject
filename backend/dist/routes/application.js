@@ -8,10 +8,10 @@ const ApplicationController_1 = require("../controllers/ApplicationController");
 const protect_1 = require("../middlewares/protect");
 const router = express_1.default.Router();
 // All routes are protected
-router.get('/', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), ApplicationController_1.getMyApplications);
-router.get('/job/:jobId', protect_1.protect, (0, protect_1.restrictTo)('employer', 'admin'), ApplicationController_1.getJobApplications);
+router.get('/', protect_1.protect, ApplicationController_1.getMyApplications);
+router.get('/job/:jobId', protect_1.protect, ApplicationController_1.getJobApplications);
 router.get('/:id', protect_1.protect, ApplicationController_1.getApplicationById); // Permission check in controller
-router.post('/', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), ApplicationController_1.createApplication);
-router.put('/:id/status', protect_1.protect, (0, protect_1.restrictTo)('employer', 'admin'), ApplicationController_1.updateApplicationStatus);
-router.delete('/:id', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), ApplicationController_1.withdrawApplication);
+router.post('/', protect_1.protect, ApplicationController_1.createApplication);
+router.put('/:id/status', protect_1.protect, ApplicationController_1.updateApplicationStatus);
+router.delete('/:id', protect_1.protect, ApplicationController_1.withdrawApplication);
 exports.default = router;

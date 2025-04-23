@@ -49,7 +49,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Generate token
-  const token = generateToken(newUser);
+  const token = generateToken(newUser, newUser.role_id);
 
   res.status(201).json(formatSuccess({
     id: newUser.id,
@@ -86,13 +86,20 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Generate token
-  const token = generateToken(user);
+  
+  const token = generateToken(user.id, user.role);
 
+
+//  get accestoken and refreshtoken from the user
+ 
+  const { accessToken, refreshToken } = token;
+  
   res.json(formatSuccess({
     id: user.id,
     email: user.email,
     role: user.role,
-    token
+    accessToken:accessToken,
+    refreshToken:refreshToken,
   }, 'Login successful'));
 });
 

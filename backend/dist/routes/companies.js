@@ -12,7 +12,7 @@ router.get('/', CompanyController_1.getAllCompanies);
 router.get('/:id', CompanyController_1.getCompanyById);
 router.get('/:id/jobs', CompanyController_1.getCompanyJobs);
 // Protected routes
-router.post('/', protect_1.protect, (0, protect_1.restrictTo)('employer'), CompanyController_1.createCompany);
+router.post('/', protect_1.protect, CompanyController_1.createCompany);
 router.put('/:id', protect_1.protect, CompanyController_1.updateCompany); // Owner check in controller
 router.delete('/:id', protect_1.protect, CompanyController_1.deleteCompany); // Owner check in controller
 exports.default = router;

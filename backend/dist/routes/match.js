@@ -8,9 +8,9 @@ const JobMatchController_1 = require("../controllers/JobMatchController");
 const protect_1 = require("../middlewares/protect");
 const router = express_1.default.Router();
 // Job seeker routes
-router.get('/', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), JobMatchController_1.getMyMatches);
-router.get('/job/:jobId', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), JobMatchController_1.calculateJobMatch);
-router.put('/:id/status', protect_1.protect, (0, protect_1.restrictTo)('jobseeker'), JobMatchController_1.updateMatchStatus);
+router.get('/', protect_1.protect, JobMatchController_1.getMyMatches);
+router.get('/job/:jobId', protect_1.protect, JobMatchController_1.calculateJobMatch);
+router.put('/:id/status', protect_1.protect, JobMatchController_1.updateMatchStatus);
 // Admin routes
-router.post('/generate', protect_1.protect, (0, protect_1.restrictTo)('admin'), JobMatchController_1.generateAllMatches);
+router.post('/generate', protect_1.protect, JobMatchController_1.generateAllMatches);
 exports.default = router;

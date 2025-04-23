@@ -8,15 +8,15 @@ const UserController_1 = require("../controllers/UserController");
 const protect_1 = require("../middlewares/protect");
 const router = express_1.default.Router();
 // Get current logged-in user (any authenticated user)
-router.get('/me', protect_1.protect, UserController_1.getCurrentUser);
+router.get('/me', UserController_1.getCurrentUser);
 // Admin-only route to get all users
-router.get('/', protect_1.protect, (0, protect_1.restrictTo)('admin'), UserController_1.getAllUsers);
+router.get('/', protect_1.protect, UserController_1.getAllUsers);
 // Routes for specific user operations
 router
     .route('/:id')
-    .get(protect_1.protect, UserController_1.getUserById)
-    .put(protect_1.protect, UserController_1.updateUser)
-    .delete(protect_1.protect, UserController_1.deleteUser);
+    .get(UserController_1.getUserById)
+    .put(UserController_1.updateUser)
+    .delete(UserController_1.deleteUser);
 // Get user skills
-router.get('/:id/skills', protect_1.protect, UserController_1.getUserSkills);
+router.get('/:id/skills', UserController_1.getUserSkills);
 exports.default = router;

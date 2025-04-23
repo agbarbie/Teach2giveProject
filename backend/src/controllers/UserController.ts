@@ -3,7 +3,7 @@ import asyncHandler from '../middlewares/asyncHandlers';
 import pool from '../db/db.config';
 import { AppError } from '../middlewares/errorMiddlewares';
 import { formatSuccess } from '../utils/helpers';
-import { RequestWithUser } from '../middlewares/protect';
+import { RequestWithUser } from '../utils/Types/index'
 
 // @desc    Get current logged-in user
 // @route   GET /api/users/me
