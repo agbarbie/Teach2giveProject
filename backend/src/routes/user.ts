@@ -7,7 +7,7 @@ import {
   getUserSkills,
   getCurrentUser
 } from '../controllers/UserController';
-import { restrictTo } from '../middlewares/protect';
+import { protect, restrictTo } from '../middlewares/protect';
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ const router = express.Router();
 router.get('/me',  getCurrentUser);
 
 // Admin-only route to get all users
-router.get('/', restrictTo('admin'), getAllUsers);
+router.get('/', protect, getAllUsers);
 
 // Routes for specific user operations
 router
