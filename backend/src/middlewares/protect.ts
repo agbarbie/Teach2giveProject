@@ -51,7 +51,7 @@ export const protect = asyncHandler(async (req: Request, res: Response, next: Ne
   // 2) Verify token
   try {
     // Make sure JWT_SECRET is properly loaded from environment variables
-    const jwtSecret = process.env.JWT_SECRET || 'fallback_secret_not_for_production';
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
     
     const decoded = jwt.verify(token, jwtSecret) as DecodedUser;
     
