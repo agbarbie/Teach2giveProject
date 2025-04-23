@@ -11,7 +11,7 @@ import { protect, restrictTo } from '../middlewares/protect';
 const router = express.Router();
 
 // Admin only routes
-router.get('/', protect, getAllUsers);
+router.get('/', getAllUsers);
 
 // User routes (protected)
 router.get('/:id', protect, getUserById);
