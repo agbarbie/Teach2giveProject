@@ -1,10 +1,29 @@
 import { Request, Response } from 'express';
-import { ParsedQs } from 'qs';
 import asyncHandler from '../middlewares/asyncHandlers';
 import pool from '../db/db.config';
 import { AppError } from '../middlewares/errorMiddlewares';
 import { formatSuccess } from '../utils/helpers';
-import { RequestWithUser } from '../utils/Types/index';
+import { RequestWithUser } from '../middlewares/protect';
+
+// @desc    Get current logged-in user
+// @route   GET /api/users/me
+// @access  Private
+export const getCurrentUser = asyncHandler(async (req: RequestWithUser, res: Response) => {
+  if (!req.user || !req.user.id) {
+    throw new AppError('User not found', 404);
+  }
+
+  const result = await pool.query(
+    'SELECT id, email, role, created_at, updated_at FROM users WHERE id = $1',
+    [req.user.id]
+  );
+
+  if (result.rows.length === 0) {
+    throw new AppError('User not found', 404);
+  }
+
+  res.json(formatSuccess(result.rows[0], 'Current user retrieved successfully'));
+});
 
 // @desc    Get all users (admin only)
 // @route   GET /api/users
@@ -44,7 +63,8 @@ export const getUserById = asyncHandler(async (req: RequestWithUser, res: Respon
 
 // @desc    Update user
 // @route   PUT /api/users/:id
-export const updateUser = asyncHandler(async (req: RequestWithUser & { body: { email?: string; role?: string } }, res: Response) => {
+// @access  Private/Admin or Own User
+export const updateUser = asyncHandler(async (req: RequestWithUser, res: Response) => {
   const userId = parseInt(req.params.id);
   const { email, role } = req.body;
 
@@ -98,7 +118,7 @@ export const updateUser = asyncHandler(async (req: RequestWithUser & { body: { e
   updateFields.push(`updated_at = NOW()`);
 
   // If no fields to update, return early
-  if (updateFields.length === 0) {
+  if (updateFields.length === 0 || (updateFields.length === 1 && updateFields[0].includes('updated_at'))) {
     throw new AppError('No fields to update', 400);
   }
 
@@ -142,7 +162,6 @@ export const deleteUser = asyncHandler(async (req: RequestWithUser, res: Respons
     await client.query('BEGIN');
 
     // Delete related data first (due to foreign key constraints)
-    // This is simplified - in a real app you'd need to handle all related tables
     await client.query('DELETE FROM jobseeker_profiles WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM user_skills WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM job_matches WHERE user_id = $1', [userId]);
