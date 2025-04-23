@@ -12,7 +12,7 @@ const helpers_1 = require("../utils/helpers");
 // @route   GET /api/jobs
 // @access  Public
 exports.getAllJobs = (0, asyncHandlers_1.default)(async (req, res) => {
-    const { status, location, title, company } = req.query;
+    const { location, title, company } = req.query;
     let query = `
     SELECT j.*, c.name as company_name 
     FROM jobs j
@@ -22,15 +22,6 @@ exports.getAllJobs = (0, asyncHandlers_1.default)(async (req, res) => {
     const queryParams = [];
     let paramIndex = 1;
     // Add filters if provided
-    if (status) {
-        query += ` AND j.status = $${paramIndex}`;
-        queryParams.push(status);
-        paramIndex++;
-    }
-    else {
-        // Default to only showing open jobs
-        query += ` AND j.status = 'open'`;
-    }
     if (location) {
         query += ` AND LOWER(j.location) LIKE LOWER($${paramIndex})`;
         queryParams.push(`%${location}%`);
@@ -80,7 +71,8 @@ exports.getJobById = (0, asyncHandlers_1.default)(async (req, res) => {
 // @access  Private/Employer
 exports.createJob = (0, asyncHandlers_1.default)(async (req, res) => {
     const userId = req.user?.id;
-    const { company_id, title, description, requirements, location, salary_range, job_type, experience_level, skills } = req.body;
+    const { company_id, title, description, requirements, location, salary_range, job_type, experience_level } = req.body;
+    const skills = req.body.skills;
     if (!company_id || !title || !description || !location || !job_type) {
         throw new errorMiddlewares_1.AppError('Please provide all required fields', 400);
     }
@@ -98,11 +90,11 @@ exports.createJob = (0, asyncHandlers_1.default)(async (req, res) => {
         await client.query('BEGIN');
         // Create job
         const jobResult = await client.query(`INSERT INTO jobs 
-       (company_id, title, description, requirements, location, salary_range, job_type, experience_level, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+       (company_id, title, description, requirements, location, salary_range, job_type, experience_level, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
        RETURNING *`, [
             company_id, title, description, requirements || '', location,
-            salary_range || null, job_type, experience_level || null, 'open'
+            salary_range || null, job_type, experience_level || null
         ]);
         const newJob = jobResult.rows[0];
         // Add skills if provided
@@ -142,7 +134,7 @@ exports.createJob = (0, asyncHandlers_1.default)(async (req, res) => {
 exports.updateJob = (0, asyncHandlers_1.default)(async (req, res) => {
     const jobId = parseInt(req.params.id);
     const userId = req.user?.id;
-    const { title, description, requirements, location, salary_range, job_type, experience_level, status, skills } = req.body;
+    const { title, description, requirements, location, salary_range, job_type, experience_level, skills } = req.body;
     const jobResult = await db_config_1.default.query(`SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
@@ -196,11 +188,6 @@ exports.updateJob = (0, asyncHandlers_1.default)(async (req, res) => {
         if (experience_level !== undefined) {
             updateFields.push(`experience_level = $${paramCounter}`);
             queryParams.push(experience_level);
-            paramCounter++;
-        }
-        if (status) {
-            updateFields.push(`status = $${paramCounter}`);
-            queryParams.push(status);
             paramCounter++;
         }
         // Add updated_at timestamp

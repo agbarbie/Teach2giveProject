@@ -7,11 +7,16 @@ const express_1 = __importDefault(require("express"));
 const UserController_1 = require("../controllers/UserController");
 const protect_1 = require("../middlewares/protect");
 const router = express_1.default.Router();
-// Admin only routes
+// Get current logged-in user (any authenticated user)
+router.get('/me', protect_1.protect, UserController_1.getCurrentUser);
+// Admin-only route to get all users
 router.get('/', protect_1.protect, (0, protect_1.restrictTo)('admin'), UserController_1.getAllUsers);
-// User routes (protected)
-router.get('/:id', protect_1.protect, UserController_1.getUserById);
-router.put('/:id', protect_1.protect, UserController_1.updateUser);
-router.delete('/:id', protect_1.protect, UserController_1.deleteUser);
+// Routes for specific user operations
+router
+    .route('/:id')
+    .get(protect_1.protect, UserController_1.getUserById)
+    .put(protect_1.protect, UserController_1.updateUser)
+    .delete(protect_1.protect, UserController_1.deleteUser);
+// Get user skills
 router.get('/:id/skills', protect_1.protect, UserController_1.getUserSkills);
 exports.default = router;

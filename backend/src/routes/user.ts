@@ -7,24 +7,24 @@ import {
   getUserSkills,
   getCurrentUser
 } from '../controllers/UserController';
-import { protect, restrictTo } from '../middlewares/protect';
+import { restrictTo } from '../middlewares/protect';
 
 const router = express.Router();
 
 // Get current logged-in user (any authenticated user)
-router.get('/me', protect, getCurrentUser);
+router.get('/me',  getCurrentUser);
 
 // Admin-only route to get all users
-router.get('/', protect, restrictTo('admin'), getAllUsers);
+router.get('/', restrictTo('admin'), getAllUsers);
 
 // Routes for specific user operations
 router
   .route('/:id')
-  .get(protect, getUserById)
-  .put(protect, updateUser)
-  .delete(protect, deleteUser);
+  .get(getUserById)
+  .put( updateUser)
+  .delete( deleteUser);
 
 // Get user skills
-router.get('/:id/skills', protect, getUserSkills);
+router.get('/:id/skills', getUserSkills);
 
 export default router;

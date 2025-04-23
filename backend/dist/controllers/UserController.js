@@ -3,11 +3,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserSkills = exports.deleteUser = exports.updateUser = exports.getUserById = exports.getAllUsers = void 0;
+exports.getUserSkills = exports.deleteUser = exports.updateUser = exports.getUserById = exports.getAllUsers = exports.getCurrentUser = void 0;
 const asyncHandlers_1 = __importDefault(require("../middlewares/asyncHandlers"));
 const db_config_1 = __importDefault(require("../db/db.config"));
 const errorMiddlewares_1 = require("../middlewares/errorMiddlewares");
 const helpers_1 = require("../utils/helpers");
+// @desc    Get current logged-in user
+// @route   GET /api/users/me
+// @access  Private
+exports.getCurrentUser = (0, asyncHandlers_1.default)(async (req, res) => {
+    if (!req.user || !req.user.id) {
+        throw new errorMiddlewares_1.AppError('User not found', 404);
+    }
+    const result = await db_config_1.default.query('SELECT id, email, role, created_at, updated_at FROM users WHERE id = $1', [req.user.id]);
+    if (result.rows.length === 0) {
+        throw new errorMiddlewares_1.AppError('User not found', 404);
+    }
+    res.json((0, helpers_1.formatSuccess)(result.rows[0], 'Current user retrieved successfully'));
+});
 // @desc    Get all users (admin only)
 // @route   GET /api/users
 // @access  Private/Admin
@@ -33,6 +46,7 @@ exports.getUserById = (0, asyncHandlers_1.default)(async (req, res) => {
 });
 // @desc    Update user
 // @route   PUT /api/users/:id
+// @access  Private/Admin or Own User
 exports.updateUser = (0, asyncHandlers_1.default)(async (req, res) => {
     const userId = parseInt(req.params.id);
     const { email, role } = req.body;
@@ -73,7 +87,7 @@ exports.updateUser = (0, asyncHandlers_1.default)(async (req, res) => {
     // Add updated_at timestamp
     updateFields.push(`updated_at = NOW()`);
     // If no fields to update, return early
-    if (updateFields.length === 0) {
+    if (updateFields.length === 0 || (updateFields.length === 1 && updateFields[0].includes('updated_at'))) {
         throw new errorMiddlewares_1.AppError('No fields to update', 400);
     }
     // Build and execute the query
@@ -107,7 +121,6 @@ exports.deleteUser = (0, asyncHandlers_1.default)(async (req, res) => {
     try {
         await client.query('BEGIN');
         // Delete related data first (due to foreign key constraints)
-        // This is simplified - in a real app you'd need to handle all related tables
         await client.query('DELETE FROM jobseeker_profiles WHERE user_id = $1', [userId]);
         await client.query('DELETE FROM user_skills WHERE user_id = $1', [userId]);
         await client.query('DELETE FROM job_matches WHERE user_id = $1', [userId]);
