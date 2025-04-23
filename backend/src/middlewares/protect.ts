@@ -35,7 +35,7 @@ export const protect = async (req: RequestWithUser, res: Response, next: NextFun
 
     try {
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'mysecretkey') as {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secure_secret_key') as {
         id: number;
         iat: number;
         exp: number;

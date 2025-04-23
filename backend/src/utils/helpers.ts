@@ -24,24 +24,86 @@ export const comparePassword = async (
  * Generate JWT token
  */
 export const generateToken = (user: Partial<User>): string => {
-  return jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      role: user.role
-    },
-    process.env.JWT_SECRET as string,
-    {
-      expiresIn: process.env.JWT_EXPIRES_IN ? parseInt(process.env.JWT_EXPIRES_IN, 10) : undefined
+  // Default to 24 hours if JWT_EXPIRES_IN is not properly set
+  let expiresIn: string | number = '24h';
+  
+  if (process.env.JWT_EXPIRES_IN) {
+    // Try to parse as a number (seconds)
+    const expiresInValue = parseInt(process.env.JWT_EXPIRES_IN, 10);
+    
+    if (!isNaN(expiresInValue)) {
+      // If it's a valid number, use it as seconds
+      expiresIn = expiresInValue;
+    } else if (typeof process.env.JWT_EXPIRES_IN === 'string') {
+      // If it's a string like '1h', '7d', use it directly
+      expiresIn = process.env.JWT_EXPIRES_IN;
     }
-  );
+  }
+  
+  // Make sure JWT_SECRET exists
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  
+  // Create the payload
+  const payload = {
+    id: user.id,
+    email: user.email,
+    role: user.role
+  };
+  
+  // Create the options object with correct typing
+  const options: jwt.SignOptions = {
+    expiresIn: expiresIn as number
+  };
+  
+  // Sign the token with proper typing
+  return jwt.sign(payload, secret, options);
 };
 
 /**
- * Verify JWT token
+ * Generate refresh token with longer expiration
  */
-export const verifyToken = (token: string): DecodedUser => {
-  return jwt.verify(token, process.env.JWT_SECRET as string) as DecodedUser;
+export const generateRefreshToken = (user: Partial<User>): string => {
+  const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT secret is not defined in environment variables');
+  }
+  
+  const payload = {
+    id: user.id,
+    tokenType: 'refresh'
+  };
+  
+  const options: jwt.SignOptions = {
+    expiresIn: '7d'
+  };
+  
+  return jwt.sign(payload, secret, options);
+};
+
+/**
+ * Verify JWT token with better error handling
+ */
+export const verifyToken = (token: string): DecodedUser | null => {
+  try {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+    
+    return jwt.verify(token, secret) as DecodedUser;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      console.log('Token expired:', error.expiredAt);
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      console.log('JWT error:', error.message);
+    } else {
+      console.log('Unexpected token verification error:', error);
+    }
+    return null;
+  }
 };
 
 /**
@@ -116,4 +178,25 @@ export const formatSuccess = (data: any, message: string = 'Success') => {
     message,
     data
   };
+};
+
+/**
+ * Check if token is about to expire and needs refreshing
+ * Returns true if token will expire within the specified threshold (default 5 minutes)
+ */
+export const isTokenNearExpiry = (token: string, thresholdMinutes: number = 5): boolean => {
+  try {
+    const decoded = jwt.decode(token) as { exp?: number };
+    if (!decoded || !decoded.exp) return true;
+    
+    const expiryTime = decoded.exp * 1000; // Convert to milliseconds
+    const currentTime = Date.now();
+    const timeUntilExpiry = expiryTime - currentTime;
+    
+    // Return true if token expires within threshold minutes
+    return timeUntilExpiry < thresholdMinutes * 60 * 1000;
+  } catch (error) {
+    // If we can't decode the token, assume it needs refreshing
+    return true;
+  }
 };

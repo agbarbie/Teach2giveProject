@@ -17,7 +17,7 @@ services:
       DB_PASSWORD: Barbie1620
       DB_NAME: skillmatchesai1
       DB_SSL: "false"
-      JWT_SECRET: mysecretkey
+      JWT_SECRET: your_secure_secret_key
       JWT_EXPIRES_IN: 1d
     volumes:
       - ./backend/src:/usr/src/app/src
