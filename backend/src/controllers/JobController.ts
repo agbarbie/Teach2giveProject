@@ -9,7 +9,7 @@ import { RequestWithUser } from '../utils/Types/index';
 // @route   GET /api/jobs
 // @access  Public
 export const getAllJobs = asyncHandler(async (req: Request, res: Response) => {
-  const { status, location, title, company } = req.query;
+  const { location, title, company } = req.query;
   
   let query = `
     SELECT j.*, c.name as company_name 
@@ -22,15 +22,6 @@ export const getAllJobs = asyncHandler(async (req: Request, res: Response) => {
   let paramIndex = 1;
   
   // Add filters if provided
-  if (status) {
-    query += ` AND j.status = $${paramIndex}`;
-    queryParams.push(status);
-    paramIndex++;
-  } else {
-    // Default to only showing open jobs
-    query += ` AND j.status = 'open'`;
-  }
-  
   if (location) {
     query += ` AND LOWER(j.location) LIKE LOWER($${paramIndex})`;
     queryParams.push(`%${location}%`);
@@ -101,8 +92,9 @@ export const createJob = asyncHandler(async (req: RequestWithUser, res: Response
   const userId = req.user?.id;
   const { 
     company_id, title, description, requirements, location, 
-    salary_range, job_type, experience_level, skills 
+    salary_range, job_type, experience_level
   } = req.body;
+  const skills = req.body.skills;
 
   if (!company_id || !title || !description || !location || !job_type) {
     throw new AppError('Please provide all required fields', 400);
@@ -132,12 +124,12 @@ export const createJob = asyncHandler(async (req: RequestWithUser, res: Response
     // Create job
     const jobResult = await client.query(
       `INSERT INTO jobs 
-       (company_id, title, description, requirements, location, salary_range, job_type, experience_level, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+       (company_id, title, description, requirements, location, salary_range, job_type, experience_level, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
        RETURNING *`,
       [
         company_id, title, description, requirements || '', location, 
-        salary_range || null, job_type, experience_level || null, 'open'
+        salary_range || null, job_type, experience_level || null
       ]
     );
 
@@ -195,7 +187,7 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
   const userId = req.user?.id;
   const { 
     title, description, requirements, location, 
-    salary_range, job_type, experience_level, status, skills 
+    salary_range, job_type, experience_level, skills 
   } = req.body;
 
   const jobResult = await pool.query(
@@ -267,12 +259,6 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
     if (experience_level !== undefined) {
       updateFields.push(`experience_level = $${paramCounter}`);
       queryParams.push(experience_level);
-      paramCounter++;
-    }
-
-    if (status) {
-      updateFields.push(`status = $${paramCounter}`);
-      queryParams.push(status);
       paramCounter++;
     }
 
