@@ -19,7 +19,7 @@ export const getAllSkills = asyncHandler(async (req: Request, res: Response) => 
     queryParams.push(category);
   }
   
-  query += ' ORDER BY category, name';
+  query += ' ORDER BY category, skill_name';
   
   const result = await pool.query(query, queryParams);
 
@@ -66,10 +66,10 @@ export const createSkill = asyncHandler(async (req: RequestWithUser, res: Respon
 
   // Create skill
   const result = await pool.query(
-    `INSERT INTO skills (name, category, created_at, updated_at)
+    `INSERT INTO skills (skill_name, category, created_at, updated_at)
      VALUES ($1, $2, NOW(), NOW())
      RETURNING *`,
-    [name, category]
+    [skill_name, category]
   );
 
   res.status(201).json(formatSuccess(result.rows[0], 'Skill created successfully'));
@@ -80,7 +80,7 @@ export const createSkill = asyncHandler(async (req: RequestWithUser, res: Respon
 // @access  Private/Admin
 export const updateSkill = asyncHandler(async (req: RequestWithUser, res: Response) => {
   const skillId = parseInt(req.params.id);
-  const { name, category } = req.body;
+  const { skill_name, category } = req.body;
 
   // Check if skill exists
   const skillExists = await pool.query(
@@ -92,15 +92,15 @@ export const updateSkill = asyncHandler(async (req: RequestWithUser, res: Respon
     throw new AppError('Skill not found', 404);
   }
 
-  // If updating name and category, check for duplicates
-  if (name && category) {
+  // If updating skill_name and category, check for duplicates
+  if (skill_name && category) {
     const duplicateCheck = await pool.query(
-      'SELECT * FROM skills WHERE LOWER(name) = LOWER($1) AND LOWER(category) = LOWER($2) AND id != $3',
-      [name, category, skillId]
+      'SELECT * FROM skills WHERE LOWER(skill_name) = LOWER($1) AND LOWER(category) = LOWER($2) AND id != $3',
+      [skill_name, category, skillId]
     );
     
     if (duplicateCheck.rows.length > 0) {
-      throw new AppError('Skill with this name and category already exists', 400);
+      throw new AppError('Skill with this skill_name and category already exists', 400);
     }
   }
 
@@ -109,9 +109,9 @@ export const updateSkill = asyncHandler(async (req: RequestWithUser, res: Respon
   let queryParams = [];
   let paramCounter = 1;
 
-  if (name) {
-    updateFields.push(`name = $${paramCounter}`);
-    queryParams.push(name);
+  if (skill_name) {
+    updateFields.push(`skill_name = $${paramCounter}`);
+    queryParams.push(skill_name);
     paramCounter++;
   }
 
