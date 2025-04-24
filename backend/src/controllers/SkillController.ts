@@ -19,7 +19,6 @@ export const getAllSkills = asyncHandler(async (req: Request, res: Response) => 
     queryParams.push(category);
   }
   
-  // Make sure this is using skill_name, not name
   query += ' ORDER BY category, skill_name';
   
   const result = await pool.query(query, queryParams);
@@ -49,9 +48,10 @@ export const getSkillById = asyncHandler(async (req: Request, res: Response) => 
 // @route   POST /api/skills
 // @access  Private/Admin
 export const createSkill = asyncHandler(async (req: RequestWithUser, res: Response) => {
+  // Validate that required fields exist and are not empty strings
   const { skill_name, category } = req.body;
 
-  if (!skill_name || !category) {
+  if (!skill_name || skill_name.trim() === '' || !category || category.trim() === '') {
     throw new AppError('Please provide skill name and category', 400);
   }
 
@@ -83,6 +83,11 @@ export const updateSkill = asyncHandler(async (req: RequestWithUser, res: Respon
   const skillId = parseInt(req.params.id);
   const { skill_name, category } = req.body;
 
+  // Check if at least one field to update is provided
+  if ((!skill_name || skill_name.trim() === '') && (!category || category.trim() === '')) {
+    throw new AppError('Please provide at least one field to update: skill_name or category', 400);
+  }
+
   // Check if skill exists
   const skillExists = await pool.query(
     'SELECT * FROM skills WHERE id = $1',
@@ -110,13 +115,13 @@ export const updateSkill = asyncHandler(async (req: RequestWithUser, res: Respon
   let queryParams = [];
   let paramCounter = 1;
 
-  if (skill_name) {
+  if (skill_name && skill_name.trim() !== '') {
     updateFields.push(`skill_name = $${paramCounter}`);
     queryParams.push(skill_name);
     paramCounter++;
   }
 
-  if (category) {
+  if (category && category.trim() !== '') {
     updateFields.push(`category = $${paramCounter}`);
     queryParams.push(category);
     paramCounter++;
@@ -124,11 +129,6 @@ export const updateSkill = asyncHandler(async (req: RequestWithUser, res: Respon
 
   // Add updated_at timestamp
   updateFields.push(`updated_at = NOW()`);
-
-  // If no fields to update, return early
-  if (updateFields.length === 0) {
-    throw new AppError('No fields to update', 400);
-  }
 
   // Build and execute the query
   const updateQuery = `
