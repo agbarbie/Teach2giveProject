@@ -56,8 +56,8 @@ export const createSkill = asyncHandler(async (req: RequestWithUser, res: Respon
 
   // Check if skill already exists
   const skillExists = await pool.query(
-    'SELECT * FROM skills WHERE LOWER(name) = LOWER($1) AND LOWER(category) = LOWER($2)',
-    [name, category]
+    'SELECT * FROM skills WHERE LOWER(skillsname) = LOWER($1) AND LOWER(category) = LOWER($2)',
+    [skill_name, category]
   );
   
   if (skillExists.rows.length > 0) {
