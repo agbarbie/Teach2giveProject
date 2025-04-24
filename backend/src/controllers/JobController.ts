@@ -66,23 +66,6 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
 
   const job = jobResult.rows[0];
 
-  // If you have job_skills table, uncomment this
-  /*
-  const skillsResult = await pool.query(
-    `SELECT js.skill_id, js.importance_level, s.name, s.category
-     FROM job_skills js
-     JOIN skills s ON js.skill_id = s.id
-     WHERE js.job_id = $1
-     ORDER BY js.importance_level, s.name`,
-    [jobId]
-  );
-
-  const jobWithSkills = {
-    ...job,
-    skills: skillsResult.rows
-  };
-  */
-
   res.json(formatSuccess(job, 'Job retrieved successfully'));
 });
 
@@ -93,12 +76,16 @@ export const createJob = asyncHandler(async (req: RequestWithUser, res: Response
   const userId = req.user?.id;
   const { 
     company_id, title, description, location, 
-    is_remote, status
+    is_remote, status, salary_range, job_type
   } = req.body;
 
-  // Verify required fields
-  if (!company_id || !title || !description || !location || !status) {
-    throw new AppError('Please provide all required fields', 400);
+  // Only company_id and title are truly required
+  if (!company_id) {
+    throw new AppError('Company ID is required', 400);
+  }
+  
+  if (!title) {
+    throw new AppError('Job title is required', 400);
   }
 
   // Verify company exists and user is the owner
@@ -116,15 +103,21 @@ export const createJob = asyncHandler(async (req: RequestWithUser, res: Response
   try {
     await client.query('BEGIN');
 
-    // Create job with your actual database columns
+    // Create job with fewer required fields
     const jobResult = await client.query(
       `INSERT INTO jobs 
-       (company_id, title, description, location, is_remote, status, posted_date, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+       (company_id, title, description, location, is_remote, status, salary_range, job_type, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
        RETURNING *`,
       [
-        company_id, title, description, location, 
-        is_remote || false, status || 'open'
+        company_id, 
+        title, 
+        description || 'No description provided', 
+        location || 'Remote', 
+        is_remote || false, 
+        status || 'open',
+        salary_range || null,
+        job_type || 'Full-time'
       ]
     );
 
@@ -156,7 +149,7 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
   const jobId = parseInt(req.params.id);
   const userId = req.user?.id;
   const { 
-    title, description, location, is_remote, status
+    title, description, location, is_remote, status, salary_range, job_type
   } = req.body;
 
   // Verify job exists and user is the company owner
@@ -188,13 +181,13 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
       paramCounter++;
     }
 
-    if (description) {
+    if (description !== undefined) {
       updateFields.push(`description = $${paramCounter}`);
       queryParams.push(description);
       paramCounter++;
     }
 
-    if (location) {
+    if (location !== undefined) {
       updateFields.push(`location = $${paramCounter}`);
       queryParams.push(location);
       paramCounter++;
@@ -206,11 +199,26 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
       paramCounter++;
     }
 
-    if (status) {
+    if (status !== undefined) {
       updateFields.push(`status = $${paramCounter}`);
       queryParams.push(status);
       paramCounter++;
     }
+    
+    if (salary_range !== undefined) {
+      updateFields.push(`salary_range = $${paramCounter}`);
+      queryParams.push(salary_range);
+      paramCounter++;
+    }
+    
+    if (job_type !== undefined) {
+      updateFields.push(`job_type = $${paramCounter}`);
+      queryParams.push(job_type);
+      paramCounter++;
+    }
+
+    // Add updated_at timestamp
+    updateFields.push(`updated_at = NOW()`);
 
     if (updateFields.length > 0) {
       const updateQuery = `
@@ -267,25 +275,8 @@ export const deleteJob = asyncHandler(async (req: RequestWithUser, res: Response
   
   try {
     await client.query('BEGIN');
-
-    // Delete job and related data
-    // If you have these related tables, uncomment them
-    /*
-    await client.query('DELETE FROM job_skills WHERE job_id = $1', [jobId]);
-    await client.query('DELETE FROM job_matches WHERE job_id = $1', [jobId]);
     
-    const applicationsResult = await client.query(
-      'SELECT id FROM applications WHERE job_id = $1', 
-      [jobId]
-    );
-    
-    for (const app of applicationsResult.rows) {
-      await client.query('DELETE FROM interview_requests WHERE application_id = $1', [app.id]);
-    }
-    
-    await client.query('DELETE FROM applications WHERE job_id = $1', [jobId]);
-    */
-    
+    // Delete job
     await client.query('DELETE FROM jobs WHERE job_id = $1', [jobId]);
     
     await client.query('COMMIT');
