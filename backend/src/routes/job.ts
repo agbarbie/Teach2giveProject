@@ -5,8 +5,6 @@ import {
   createJob,
   updateJob,
   deleteJob,
-  addJobSkill,
-  removeJobSkill
 } from '../controllers/JobController';
 import { protect } from '../middlewares/protect';
 
@@ -21,8 +19,8 @@ router.post('/', protect, createJob);
 router.put('/:id', protect, updateJob); // Owner check in controller
 router.delete('/:id', protect,  deleteJob); // Owner check in controller
 
-// Job skills management - all require authentication and employer role
-router.post('/:id/skills', protect, addJobSkill); // Owner check in controller
-router.delete('/:id/skills/:skillId', protect, removeJobSkill); 
+// // Job skills management - all require authentication and employer role
+// router.post('/:id/skills', protect, addJobSkill); // Owner check in controller
+// router.delete('/:id/skills/:skillId', protect, removeJobSkil); 
 
 export default router;
