@@ -19,6 +19,7 @@ export const getAllSkills = asyncHandler(async (req: Request, res: Response) => 
     queryParams.push(category);
   }
   
+  // Make sure this is using skill_name, not name
   query += ' ORDER BY category, skill_name';
   
   const result = await pool.query(query, queryParams);
@@ -56,7 +57,7 @@ export const createSkill = asyncHandler(async (req: RequestWithUser, res: Respon
 
   // Check if skill already exists
   const skillExists = await pool.query(
-    'SELECT * FROM skills WHERE LOWER(skillsname) = LOWER($1) AND LOWER(category) = LOWER($2)',
+    'SELECT * FROM skills WHERE LOWER(skill_name) = LOWER($1) AND LOWER(category) = LOWER($2)',
     [skill_name, category]
   );
   
