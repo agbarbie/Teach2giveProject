@@ -48,9 +48,9 @@ export const getSkillById = asyncHandler(async (req: Request, res: Response) => 
 // @route   POST /api/skills
 // @access  Private/Admin
 export const createSkill = asyncHandler(async (req: RequestWithUser, res: Response) => {
-  const { name, category } = req.body;
+  const { skill_name, category } = req.body;
 
-  if (!name || !category) {
+  if (!skill_name || !category) {
     throw new AppError('Please provide skill name and category', 400);
   }
 
