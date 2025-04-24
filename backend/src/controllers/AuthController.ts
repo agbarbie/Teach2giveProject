@@ -400,7 +400,7 @@ export const linkCompany = asyncHandler(async (req: any, res: Response) => {
 
     res.json(formatSuccess({
       company: companyResult.rows[0]
-    }, 'Company linked successfully'));
+    }, 'Company linked successfully...'));
     
   } catch (error) {
     await client.query('ROLLBACK');
