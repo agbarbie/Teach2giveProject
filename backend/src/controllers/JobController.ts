@@ -56,7 +56,7 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
     `SELECT j.*, c.name as company_name 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1`,
+     WHERE j.job_id = $1`,
     [jobId]
   );
 
@@ -66,6 +66,8 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
 
   const job = jobResult.rows[0];
 
+  // If you have job_skills table, uncomment this
+  /*
   const skillsResult = await pool.query(
     `SELECT js.skill_id, js.importance_level, s.name, s.category
      FROM job_skills js
@@ -79,8 +81,9 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
     ...job,
     skills: skillsResult.rows
   };
+  */
 
-  res.json(formatSuccess(jobWithSkills, 'Job retrieved successfully'));
+  res.json(formatSuccess(job, 'Job retrieved successfully'));
 });
 
 // @desc    Create job
@@ -89,12 +92,12 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
 export const createJob = asyncHandler(async (req: RequestWithUser, res: Response) => {
   const userId = req.user?.id;
   const { 
-    company_id, title, description, requirements, location, 
-    salary_range, job_type, experience_level
+    company_id, title, description, location, 
+    is_remote, status
   } = req.body;
-  const skills = req.body.skills;
 
-  if (!company_id || !title || !description || !location || !job_type) {
+  // Verify required fields
+  if (!company_id || !title || !description || !location || !status) {
     throw new AppError('Please provide all required fields', 400);
   }
 
@@ -113,56 +116,31 @@ export const createJob = asyncHandler(async (req: RequestWithUser, res: Response
   try {
     await client.query('BEGIN');
 
-    // Create job
+    // Create job with your actual database columns
     const jobResult = await client.query(
       `INSERT INTO jobs 
-       (company_id, title, description, requirements, location, salary_range, job_type, experience_level, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+       (company_id, title, description, location, is_remote, status, posted_date, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
        RETURNING *`,
       [
-        company_id, title, description, requirements || '', location, 
-        salary_range || null, job_type, experience_level || null
+        company_id, title, description, location, 
+        is_remote || false, status || 'open'
       ]
     );
 
     const newJob = jobResult.rows[0];
-
-    // Add skills if provided
-    if (skills && Array.isArray(skills) && skills.length > 0) {
-      for (const skill of skills) {
-        await client.query(
-          `INSERT INTO job_skills (job_id, skill_id, importance_level, created_at)
-           VALUES ($1, $2, $3, NOW())`,
-          [newJob.id, skill.skill_id, skill.importance_level || 'preferred']
-        );
-      }
-    }
-
+    
     await client.query('COMMIT');
 
     const fullJobResult = await pool.query(
       `SELECT j.*, c.name as company_name 
        FROM jobs j
        JOIN companies c ON j.company_id = c.company_id
-       WHERE j.id = $1`,
-      [newJob.id]
+       WHERE j.job_id = $1`,
+      [newJob.job_id]
     );
 
-    const skillsResult = await pool.query(
-      `SELECT js.skill_id, js.importance_level, s.name, s.category
-       FROM job_skills js
-       JOIN skills s ON js.skill_id = s.id
-       WHERE js.job_id = $1
-       ORDER BY js.importance_level, s.name`,
-      [newJob.id]
-    );
-
-    const jobWithSkills = {
-      ...fullJobResult.rows[0],
-      skills: skillsResult.rows
-    };
-
-    res.status(201).json(formatSuccess(jobWithSkills, 'Job created successfully'));
+    res.status(201).json(formatSuccess(fullJobResult.rows[0], 'Job created successfully'));
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -178,8 +156,7 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
   const jobId = parseInt(req.params.id);
   const userId = req.user?.id;
   const { 
-    title, description, requirements, location, 
-    salary_range, job_type, experience_level, skills 
+    title, description, location, is_remote, status
   } = req.body;
 
   // Verify job exists and user is the company owner
@@ -187,7 +164,7 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
     `SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1 AND c.owner_id = $2`,
+     WHERE j.job_id = $1 AND c.owner_id = $2`,
     [jobId, userId]
   );
   
@@ -217,60 +194,34 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
       paramCounter++;
     }
 
-    if (requirements !== undefined) {
-      updateFields.push(`requirements = $${paramCounter}`);
-      queryParams.push(requirements);
-      paramCounter++;
-    }
-
     if (location) {
       updateFields.push(`location = $${paramCounter}`);
       queryParams.push(location);
       paramCounter++;
     }
 
-    if (salary_range !== undefined) {
-      updateFields.push(`salary_range = $${paramCounter}`);
-      queryParams.push(salary_range);
+    if (is_remote !== undefined) {
+      updateFields.push(`is_remote = $${paramCounter}`);
+      queryParams.push(is_remote);
       paramCounter++;
     }
 
-    if (job_type) {
-      updateFields.push(`job_type = $${paramCounter}`);
-      queryParams.push(job_type);
+    if (status) {
+      updateFields.push(`status = $${paramCounter}`);
+      queryParams.push(status);
       paramCounter++;
     }
-
-    if (experience_level !== undefined) {
-      updateFields.push(`experience_level = $${paramCounter}`);
-      queryParams.push(experience_level);
-      paramCounter++;
-    }
-
-    updateFields.push(`updated_at = NOW()`);
 
     if (updateFields.length > 0) {
       const updateQuery = `
         UPDATE jobs 
         SET ${updateFields.join(', ')} 
-        WHERE id = $${paramCounter} 
+        WHERE job_id = $${paramCounter} 
         RETURNING *
       `;
       queryParams.push(jobId);
 
       await client.query(updateQuery, queryParams);
-    }
-
-    if (skills && Array.isArray(skills)) {
-      await client.query('DELETE FROM job_skills WHERE job_id = $1', [jobId]);
-      
-      for (const skill of skills) {
-        await client.query(
-          `INSERT INTO job_skills (job_id, skill_id, importance_level, created_at)
-           VALUES ($1, $2, $3, NOW())`,
-          [jobId, skill.skill_id, skill.importance_level || 'preferred']
-        );
-      }
     }
 
     await client.query('COMMIT');
@@ -279,25 +230,11 @@ export const updateJob = asyncHandler(async (req: RequestWithUser, res: Response
       `SELECT j.*, c.name as company_name 
        FROM jobs j
        JOIN companies c ON j.company_id = c.company_id
-       WHERE j.id = $1`,
+       WHERE j.job_id = $1`,
       [jobId]
     );
 
-    const skillsResult = await pool.query(
-      `SELECT js.skill_id, js.importance_level, s.name, s.category
-       FROM job_skills js
-       JOIN skills s ON js.skill_id = s.id
-       WHERE js.job_id = $1
-       ORDER BY js.importance_level, s.name`,
-      [jobId]
-    );
-
-    const jobWithSkills = {
-      ...updatedJobResult.rows[0],
-      skills: skillsResult.rows
-    };
-
-    res.json(formatSuccess(jobWithSkills, 'Job updated successfully'));
+    res.json(formatSuccess(updatedJobResult.rows[0], 'Job updated successfully'));
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -318,7 +255,7 @@ export const deleteJob = asyncHandler(async (req: RequestWithUser, res: Response
     `SELECT j.*, c.owner_id 
      FROM jobs j
      JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1 AND c.owner_id = $2`,
+     WHERE j.job_id = $1 AND c.owner_id = $2`,
     [jobId, userId]
   );
   
@@ -331,6 +268,9 @@ export const deleteJob = asyncHandler(async (req: RequestWithUser, res: Response
   try {
     await client.query('BEGIN');
 
+    // Delete job and related data
+    // If you have these related tables, uncomment them
+    /*
     await client.query('DELETE FROM job_skills WHERE job_id = $1', [jobId]);
     await client.query('DELETE FROM job_matches WHERE job_id = $1', [jobId]);
     
@@ -344,7 +284,9 @@ export const deleteJob = asyncHandler(async (req: RequestWithUser, res: Response
     }
     
     await client.query('DELETE FROM applications WHERE job_id = $1', [jobId]);
-    await client.query('DELETE FROM jobs WHERE id = $1', [jobId]);
+    */
+    
+    await client.query('DELETE FROM jobs WHERE job_id = $1', [jobId]);
     
     await client.query('COMMIT');
     
@@ -355,92 +297,4 @@ export const deleteJob = asyncHandler(async (req: RequestWithUser, res: Response
   } finally {
     client.release();
   }
-});
-
-// @desc    Add skill to job
-// @route   POST /api/jobs/:id/skills
-// @access  Private/Employer
-export const addJobSkill = asyncHandler(async (req: RequestWithUser, res: Response) => {
-  const jobId = parseInt(req.params.id);
-  const userId = req.user?.id;
-  const { skill_id, importance_level } = req.body;
-
-  if (!skill_id) {
-    throw new AppError('Skill ID is required', 400);
-  }
-
-  // Verify job exists and user is the company owner
-  const jobResult = await pool.query(
-    `SELECT j.*, c.owner_id 
-     FROM jobs j
-     JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1 AND c.owner_id = $2`,
-    [jobId, userId]
-  );
-  
-  if (jobResult.rows.length === 0) {
-    throw new AppError('Job not found or you are not the owner', 404);
-  }
-
-  const skillExists = await pool.query('SELECT * FROM skills WHERE id = $1', [skill_id]);
-  
-  if (skillExists.rows.length === 0) {
-    throw new AppError('Skill not found', 404);
-  }
-
-  const jobSkillExists = await pool.query(
-    'SELECT * FROM job_skills WHERE job_id = $1 AND skill_id = $2',
-    [jobId, skill_id]
-  );
-  
-  if (jobSkillExists.rows.length > 0) {
-    throw new AppError('This skill is already added to the job', 400);
-  }
-
-  const result = await pool.query(
-    `INSERT INTO job_skills (job_id, skill_id, importance_level, created_at)
-     VALUES ($1, $2, $3, NOW())
-     RETURNING *`,
-    [jobId, skill_id, importance_level || 'preferred']
-  );
-
-  res.status(201).json(formatSuccess(result.rows[0], 'Skill added to job successfully'));
-});
-
-// @desc    Remove skill from job
-// @route   DELETE /api/jobs/:id/skills/:skillId
-// @access  Private/Employer
-export const removeJobSkill = asyncHandler(async (req: RequestWithUser, res: Response) => {
-  const jobId = parseInt(req.params.id);
-  const skillId = parseInt(req.params.skillId);
-  const userId = req.user?.id;
-
-  // Verify job exists and user is the company owner
-  const jobResult = await pool.query(
-    `SELECT j.*, c.owner_id 
-     FROM jobs j
-     JOIN companies c ON j.company_id = c.company_id
-     WHERE j.id = $1 AND c.owner_id = $2`,
-    [jobId, userId]
-  );
-  
-  if (jobResult.rows.length === 0) {
-    throw new AppError('Job not found or you are not the owner', 404);
-  }
-
-  const jobSkillExists = await pool.query(
-    'SELECT * FROM job_skills WHERE job_id = $1 AND skill_id = $2',
-    [jobId, skillId]
-  );
-  
-  if (jobSkillExists.rows.length === 0) {
-    throw new AppError('This skill is not associated with the job', 404);
-  }
-
-  await pool.query(
-    'DELETE FROM job_skills WHERE job_id = $1 AND skill_id = $2',
-    [jobId, skillId]
-  );
-
-  res.json(formatSuccess(null, 'Skill removed from job successfully'));
 });
