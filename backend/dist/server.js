@@ -19,6 +19,7 @@ const application_1 = __importDefault(require("./routes/application"));
 const interviewRequests_1 = __importDefault(require("./routes/interviewRequests"));
 const match_1 = __importDefault(require("./routes/match"));
 const resource_1 = __importDefault(require("./routes/resource"));
+const certificateAndProject_1 = __importDefault(require("./routes/certificateAndProject"));
 // Load environment variables
 dotenv_1.default.config();
 // Initialize express
@@ -47,6 +48,7 @@ app.use('/api/applications', application_1.default);
 app.use('/api/interviews', interviewRequests_1.default);
 app.use('/api/matches', match_1.default);
 app.use('/api/resources', resource_1.default);
+app.use('/api/portfolio', certificateAndProject_1.default);
 // Error handling middleware
 app.use(errorMiddlewares_1.notFound);
 app.use(errorMiddlewares_1.errorHandler);

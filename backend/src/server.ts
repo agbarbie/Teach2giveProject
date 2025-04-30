@@ -15,6 +15,7 @@ import applicationRoutes from './routes/application';
 import interviewRoutes from './routes/interviewRequests';
 import matchRoutes from './routes/match';
 import resourceRoutes from './routes/resource';
+import certificateAndProject from './routes/certificateAndProject';
 
 // Load environment variables
 dotenv.config();
@@ -49,6 +50,7 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/portfolio', certificateAndProject);
 
 // Error handling middleware
 app.use(notFound);

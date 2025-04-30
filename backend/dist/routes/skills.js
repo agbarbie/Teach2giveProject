@@ -13,10 +13,10 @@ router.get('/skills/:id', SkillController_1.getSkillById);
 router.get('/skills/categories', SkillController_1.getSkillCategories);
 router.get('/users/:id/skills', SkillController_1.getJobseekerSkillsByUserId);
 // Protected routes for jobseekers
-router.get('/users/skills', protect_1.protect, SkillController_1.getUserSkills);
-router.post('/users/skills', protect_1.protect, SkillController_1.addUserSkill);
-router.put('/users/skills/:id', protect_1.protect, SkillController_1.updateUserSkill);
-router.delete('/users/skills/:id', protect_1.protect, SkillController_1.deleteUserSkill);
+router.get('/users/skills', SkillController_1.getUserSkills);
+router.post('/users/skills', SkillController_1.addUserSkill);
+router.put('/users/skills/:id', SkillController_1.updateUserSkill);
+router.delete('/users/skills/:id', SkillController_1.deleteUserSkill);
 // Admin routes
 router.post('/admin/skills', protect_1.protect, SkillController_1.createSkill);
 router.put('/admin/skills/:id', protect_1.protect, SkillController_1.updateSkill);

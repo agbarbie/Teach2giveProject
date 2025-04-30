@@ -26,14 +26,14 @@ export class AdminDashboardComponent {
       id: 2,
       name: 'John Doe',
       email: 'john.doe@example.com',
-      role: 'User',
+      role: 'Jobseeker',
       status: 'Active'
     },
     {
       id: 3,
       name: 'Jane Smith',
       email: 'jane.smith@example.com',
-      role: 'User',
+      role: 'Employer',
       status: 'Suspended'
     }
   ];

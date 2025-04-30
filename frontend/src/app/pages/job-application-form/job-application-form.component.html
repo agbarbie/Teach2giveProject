@@ -4,7 +4,7 @@
     <div class="logo">SKILLMATCH.AI</div>
     <h2 class="title">Professional Information</h2>
   </div>
-
+  
   <form [formGroup]="applicationForm">
     <div class="form-section">
       <h3>Personal Information</h3>
@@ -16,7 +16,7 @@
         <input type="password" placeholder="Password" formControlName="password">
       </div>
     </div>
-
+    
     <div class="form-section">
       <h3>Education Information</h3>
       <div class="education-fields" formGroupName="educationInfo">
@@ -27,27 +27,62 @@
         <input type="text" placeholder="College/University" formControlName="college">
       </div>
     </div>
-
+    
     <div class="form-section">
       <h3>Skills</h3>
       <button type="button" class="add-skill-btn" (click)="addSkill()">Add Skill</button>
-<div class="skills-list" *ngIf="skills.length > 0">
-    <div *ngFor="let skillControl of skills.controls; let i = index" class="skill-input-wrapper">
-      <input type="text" [formControl]="$any(skillControl)" placeholder="Enter skill">
-      <span class="remove-skill" (click)="removeSkill(i)">×</span>
+      <div class="skills-list" *ngIf="skills.length > 0">
+        <div *ngFor="let skillControl of skills.controls; let i = index" class="skill-input-wrapper">
+          <input type="text" [formControl]="$any(skillControl)" placeholder="Enter skill">
+          <span class="remove-skill" (click)="removeSkill(i)">×</span>
+        </div>
+      </div>
     </div>
-  </div>
-
+    
+    <div class="form-section">
+      <h3>Certificates</h3>
+      <button type="button" class="add-btn" (click)="addCertificate()">Add Certificate</button>
+      <div class="list-items" *ngIf="certificates.length > 0">
+        <div *ngFor="let certGroup of certificates.controls; let i = index" [formGroup]="$any(certGroup)" class="item-group">
+          <div class="row">
+            <input type="text" formControlName="name" placeholder="Certificate Name" class="name-field">
+            <input type="text" formControlName="issuer" placeholder="Issuing Organization" class="issuer-field">
+          </div>
+          <div class="row">
+            <input type="date" formControlName="issueDate" placeholder="Issue Date" class="date-field">
+            <input type="text" formControlName="credential" placeholder="Credential ID (optional)" class="credential-field">
+          </div>
+          <span class="remove-item" (click)="removeCertificate(i)">×</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <h3>Projects</h3>
+      <button type="button" class="add-btn" (click)="addProject()">Add Project</button>
+      <div class="list-items" *ngIf="projects.length > 0">
+        <div *ngFor="let projGroup of projects.controls; let i = index" [formGroup]="$any(projGroup)" class="item-group">
+          <input type="text" formControlName="title" placeholder="Project Title">
+          <textarea formControlName="description" placeholder="Project Description"></textarea>
+          <div class="row">
+            <input type="text" formControlName="technologies" placeholder="Technologies Used" class="tech-field">
+            <input type="text" formControlName="url" placeholder="Project URL (optional)" class="url-field">
+          </div>
+          <span class="remove-item" (click)="removeProject(i)">×</span>
+        </div>
+      </div>
+    </div>
+    
     <div class="form-section">
       <h3>Work Experience</h3>
       <textarea formControlName="workExperience" placeholder="Describe your work experience"></textarea>
     </div>
-
+    
     <div class="form-section">
       <h3>Portfolio</h3>
       <input type="text" placeholder="Portfolio URL" formControlName="portfolioUrl">
     </div>
-
+    
     <div class="form-section">
       <h3>CV Upload</h3>
       <div class="cv-upload">
@@ -56,6 +91,7 @@
         <input type="file" id="cv-upload" (change)="onFileSelected($event)" style="display:none">
       </div>
     </div>
-
-  <button class="submit-btn" (click)="submitApplication()">Submit Application</button>
+    
+    <button class="submit-btn" (click)="submitApplication()">Submit Application</button>
+  </form>
 </div>

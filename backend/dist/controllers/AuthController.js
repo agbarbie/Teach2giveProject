@@ -277,7 +277,7 @@ exports.linkCompany = (0, asyncHandlers_1.default)(async (req, res) => {
         const companyResult = await db_config_1.default.query('SELECT * FROM companies WHERE company_id = $1', [companyId]);
         res.json((0, helpers_1.formatSuccess)({
             company: companyResult.rows[0]
-        }, 'Company linked successfully'));
+        }, 'Company linked successfully...'));
     }
     catch (error) {
         await client.query('ROLLBACK');

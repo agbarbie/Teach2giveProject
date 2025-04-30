@@ -65,8 +65,9 @@ export class JobsComponent implements OnInit {
   // Load both default and posted jobs
   private loadJobs(): void {
     const postedJobs = this.jobsService.getJobs();
-    this.filteredJobs = [...this.defaultJobs, ...postedJobs];
-    
+    this.jobsService.getJobs().subscribe(postedJobs => {
+      this.filteredJobs = [...this.defaultJobs, ...postedJobs];
+    });    
     // Apply current filter if active
     if (!this.showAllJobs && this.filterLocation) {
       this.applyFilter();
@@ -91,8 +92,9 @@ export class JobsComponent implements OnInit {
 
   // Apply location filter
   private applyFilter(): void {
-    this.filteredJobs = [...this.defaultJobs, ...this.jobsService.getJobs()]
-      .filter(job => job.location === this.filterLocation);
+    this.jobsService.getJobs().subscribe(jobs => {
+      this.filteredJobs = [...this.defaultJobs, ...jobs];
+    });
   }
 
   // Export job data (currently logs to console)

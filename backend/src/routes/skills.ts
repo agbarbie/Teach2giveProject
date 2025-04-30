@@ -24,10 +24,10 @@ router.get('/skills/categories', getSkillCategories);
 router.get('/users/:id/skills', getJobseekerSkillsByUserId);
 
 // Protected routes for jobseekers
-router.get('/users/skills', protect, getUserSkills);
-router.post('/users/skills', protect, addUserSkill);
-router.put('/users/skills/:id', protect,  updateUserSkill);
-router.delete('/users/skills/:id', protect,deleteUserSkill);
+router.get('/users/skills', getUserSkills);
+router.post('/users/skills', addUserSkill);
+router.put('/users/skills/:id', updateUserSkill);
+router.delete('/users/skills/:id', deleteUserSkill);
 
 // Admin routes
 router.post('/admin/skills', protect, createSkill);

@@ -1,56 +1,186 @@
-<aside class="sidebar">
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
     <img src="skillmatchAi.png" alt="SkillMatch AI Logo" class="logo" />
     <h2>SkillMatch AI</h2>
     <nav>
       <ul>
         <li (click)="navigateTo('/landing')">Home</li>
         <li (click)="navigateTo('/analytics')">Candidates' Analytics</li>
-        <li (click)="navigateTo('/jobs')">Jobs</li>
+        <li (click)="navigateTo('/jobs')" class="active">Jobs</li>
         <li (click)="navigateTo('/ai-assistant')">AI Assistant</li>
       </ul>
     </nav>
   </aside>
-<div class="post-job-wrapper">
-    <h1>Post a New Job</h1>
-    <form [formGroup]="jobForm" (ngSubmit)="onSubmit()">
-      <label>
-        Job Title
-        <input type="text" formControlName="jobTitle" />
-      </label>
-  
-      <label>
-        Job Description
-        <textarea formControlName="jobDescription"></textarea>
-      </label>
-  
-      <label>
-        Requirements
-        <textarea formControlName="requirements"></textarea>
-      </label>
-  
-      <div class="form-row">
-        <label>
-          Salary Range
-          <input type="text" formControlName="salaryRange" />
-        </label>
-  
-        <label>
-          Location
-          <input type="text" formControlName="location" />
-        </label>
+
+  <!-- Main Content -->
+  <div class="post-job-wrapper">
+    <div class="post-job-container">
+      <div class="form-header">
+        <h1>Post a New Job</h1>
+        <p>Create a compelling job posting to attract the right talent</p>
       </div>
-  
-      <label>
-        Job Type
-        <select formControlName="jobType">
-          <option *ngFor="let type of jobTypes" [value]="type">{{ type }}</option>
-        </select>
-      </label>
-  
-      <div class="form-actions">
-        <button type="button" (click)="onCancel()">Cancel</button>
-        <button type="submit">Post Job</button>
+
+      <!-- Alert Messages -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <span>{{ errorMessage }}</span>
       </div>
-    </form>
+
+      <div *ngIf="successMessage" class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <!-- Job Posting Form -->
+      <form [formGroup]="jobForm" (ngSubmit)="onSubmit()">
+        <!-- Company Selection -->
+        <div class="form-group">
+          <label for="company">Company <span class="required">*</span></label>
+          <select id="company" formControlName="company_id" class="form-control" [class.invalid]="f['company_id'].touched && f['company_id'].invalid">
+            <option value="" disabled>Select your company</option>
+            <option *ngFor="let company of userCompanies" [value]="company.company_id">
+              {{ company.name }}
+            </option>
+          </select>
+          <div *ngIf="f['company_id'].touched && f['company_id'].invalid" class="error-message">
+            Company is required
+          </div>
+          <div *ngIf="userCompanies.length === 0" class="info-message">
+            You need to <a [routerLink]="['/company/create']">create a company</a> first
+          </div>
+        </div>
+
+        <!-- Job Title -->
+        <div class="form-group">
+          <label for="jobTitle">Job Title <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="jobTitle" 
+            formControlName="title" 
+            class="form-control" 
+            placeholder="e.g. Frontend Developer, Project Manager"
+            [class.invalid]="f['title'].touched && f['title'].invalid"
+          >
+          <div *ngIf="f['title'].touched && f['title'].errors?.['required']" class="error-message">
+            Job title is required
+          </div>
+          <div *ngIf="f['title'].touched && f['title'].errors?.['minlength']" class="error-message">
+            Job title must be at least 5 characters
+          </div>
+        </div>
+
+        <!-- Job Description -->
+        <div class="form-group">
+          <label for="jobDescription">Job Description <span class="required">*</span></label>
+          <textarea 
+            id="jobDescription" 
+            formControlName="description" 
+            class="form-control" 
+            rows="5"
+            placeholder="Describe the role, responsibilities, and what a typical day looks like"
+            [class.invalid]="f['description'].touched && f['description'].invalid"
+          ></textarea>
+          <div *ngIf="f['description'].touched && f['description'].errors?.['required']" class="error-message">
+            Job description is required
+          </div>
+          <div *ngIf="f['description'].touched && f['description'].errors?.['minlength']" class="error-message">
+            Description must be at least 20 characters
+          </div>
+        </div>
+
+        <!-- Requirements -->
+        <div class="form-group">
+          <label for="requirements">Requirements <span class="required">*</span></label>
+          <textarea 
+            id="requirements" 
+            formControlName="requirements" 
+            class="form-control" 
+            rows="5"
+            placeholder="List skills, qualifications, and experience required for this role"
+            [class.invalid]="f['requirements'].touched && f['requirements'].invalid"
+          ></textarea>
+          <div *ngIf="f['requirements'].touched && f['requirements'].errors?.['required']" class="error-message">
+            Requirements are required
+          </div>
+          <div *ngIf="f['requirements'].touched && f['requirements'].errors?.['minlength']" class="error-message">
+            Requirements must be at least 20 characters
+          </div>
+        </div>
+
+        <!-- Two-Column Layout -->
+        <div class="form-row">
+          <!-- Salary Range -->
+          <div class="form-group">
+            <label for="salaryRange">Salary Range <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="salaryRange" 
+              formControlName="salary_range" 
+              class="form-control" 
+              placeholder="e.g. $70,000 - $90,000"
+              [class.invalid]="f['salary_range'].touched && f['salary_range'].invalid"
+            >
+            <div *ngIf="f['salary_range'].touched && f['salary_range'].invalid" class="error-message">
+              Salary range is required
+            </div>
+          </div>
+
+          <!-- Location -->
+          <div class="form-group">
+            <label for="location">Location <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="location" 
+              formControlName="location" 
+              class="form-control" 
+              placeholder="e.g. New York, NY"
+              [class.invalid]="f['location'].touched && f['location'].invalid"
+            >
+            <div *ngIf="f['location'].touched && f['location'].invalid" class="error-message">
+              Location is required
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Type and Remote -->
+        <div class="form-row">
+          <!-- Job Type -->
+          <div class="form-group">
+            <label for="jobType">Job Type <span class="required">*</span></label>
+            <select 
+              id="jobType" 
+              formControlName="job_type" 
+              class="form-control"
+              [class.invalid]="f['job_type'].touched && f['job_type'].invalid"
+            >
+              <option *ngFor="let type of jobTypes" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+
+          <!-- Remote Option -->
+          <div class="form-group checkbox-group">
+            <label class="checkbox-container">
+              <input type="checkbox" [checked]="jobForm.get('is_remote')?.value" (change)="toggleRemote()">
+              <span class="checkmark"></span>
+              This is a remote position
+            </label>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="jobForm.invalid || isSubmitting"
+          >
+            <span *ngIf="isSubmitting" class="spinner"></span>
+            {{ isSubmitting ? 'Creating...' : 'Post Job' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-  
+</div>
