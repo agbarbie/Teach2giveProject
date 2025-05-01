@@ -50,6 +50,9 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
     const newUser = result.rows[0];
 
+    // Variable to store company ID for later use
+    let companyId = null;
+
     // Create profile based on role
     if (userRole === 'jobseeker') {
       await client.query(
@@ -62,8 +65,6 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         'SELECT company_id FROM companies WHERE LOWER(name) = LOWER($1)',
         [company_name]
       );
-      
-      let companyId;
       
       if (companyQuery.rows.length > 0) {
         // Company exists
@@ -88,7 +89,6 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       );
       
       // Also create entry in user_companies table for more flexibility
-      // Create the table if it doesn't exist yet
       await client.query(`
         CREATE TABLE IF NOT EXISTS user_companies (
           id SERIAL PRIMARY KEY,
@@ -109,30 +109,38 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     // Generate token
     const token = generateToken(newUser.id, newUser.role);
     
-    await client.query('COMMIT');
-
-    const { accessToken, refreshToken } = token;
-
-    // Get company information if it's an employer
+    // Get company information before committing transaction
     let companyInfo = null;
-    if (userRole === 'employer') {
-      const companyResult = await pool.query(
-        'SELECT c.* FROM companies c JOIN users u ON c.company_id = u.company_id WHERE u.id = $1',
-        [newUser.id]
+    if (userRole === 'employer' && companyId) {
+      const companyResult = await client.query(
+        'SELECT * FROM companies WHERE company_id = $1',
+        [companyId]
       );
+      
       if (companyResult.rows.length > 0) {
         companyInfo = companyResult.rows[0];
       }
     }
+    
+    await client.query('COMMIT');
 
-    res.status(201).json(formatSuccess({
-      id: newUser.id,
-      email: newUser.email,
-      role: newUser.role,
-      accessToken,
-      refreshToken,
-      company: companyInfo
-    }, 'User registered successfully'));
+    const { accessToken, refreshToken } = token;
+
+    // Send response directly with explicitly structured data
+    res.status(201).json({
+      status: "success",
+      message: "User registered successfully",
+      data: {
+        id: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+        company: companyInfo,
+        token: {
+          accessToken,
+          refreshToken
+        }
+      }
+    });
     
   } catch (error) {
     await client.query('ROLLBACK');
@@ -202,14 +210,21 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     }
   }
   
-  res.json(formatSuccess({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    accessToken,
-    refreshToken,
-    company: companyInfo
-  }, 'Login successful'));
+  // Use same explicit response structure as register to maintain consistency
+  res.json({
+    status: "success",
+    message: "Login successful",
+    data: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      company: companyInfo,
+      token: {
+        accessToken,
+        refreshToken
+      }
+    }
+  });
 });
 
 // @desc    Get current user profile
@@ -259,10 +274,15 @@ export const getCurrentUser = asyncHandler(async (req: any, res: Response) => {
     }
   }
 
-  res.json(formatSuccess({
-    ...user,
-    company: companyInfo
-  }, 'Current user retrieved successfully'));
+  // Use same explicit response structure for consistency
+  res.json({
+    status: "success",
+    message: "Current user retrieved successfully",
+    data: {
+      ...user,
+      company: companyInfo
+    }
+  });
 });
 
 // @desc    Change password
@@ -301,7 +321,11 @@ export const changePassword = asyncHandler(async (req: any, res: Response) => {
     [hashedPassword, userId]
   );
 
-  res.json(formatSuccess(null, 'Password updated successfully'));
+  res.json({
+    status: "success",
+    message: "Password updated successfully",
+    data: null
+  });
 });
 
 // @desc    Link user to company (for existing users)
@@ -365,7 +389,6 @@ export const linkCompany = asyncHandler(async (req: any, res: Response) => {
     );
     
     // Also create entry in user_companies table for more flexibility
-    // Create the table if it doesn't exist yet
     await client.query(`
       CREATE TABLE IF NOT EXISTS user_companies (
         id SERIAL PRIMARY KEY,
@@ -392,15 +415,20 @@ export const linkCompany = asyncHandler(async (req: any, res: Response) => {
     
     await client.query('COMMIT');
     
-    // Get company information
+    // Get complete company information
     const companyResult = await pool.query(
       'SELECT * FROM companies WHERE company_id = $1',
       [companyId]
     );
 
-    res.json(formatSuccess({
-      company: companyResult.rows[0]
-    }, 'Company linked successfully...'));
+    // Use consistent response structure
+    res.json({
+      status: "success",
+      message: "Company linked successfully",
+      data: {
+        company: companyResult.rows[0]
+      }
+    });
     
   } catch (error) {
     await client.query('ROLLBACK');
